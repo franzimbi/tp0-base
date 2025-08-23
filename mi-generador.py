@@ -13,6 +13,8 @@ def crear_server():
       - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net
+    volumes:
+      - ./config/server/config.ini:/config.ini
 """
 
 def crear_cliente(id):
@@ -25,6 +27,8 @@ def crear_cliente(id):
       - CLI_LOG_LEVEL=DEBUG
     networks:
       - testing_net
+    volumes:
+      - ./config/client/config.yaml:/config.yaml
     depends_on:
       - server
 """
