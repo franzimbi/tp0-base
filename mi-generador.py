@@ -7,28 +7,28 @@ def crear_server():
     return """  server:
     container_name: server
     image: server:latest
+    volumes:
+      - ./server/config.ini:/config.ini
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net
-    volumes:
-      - ./server/config.ini:/config.ini
 """
 
 def crear_cliente(id):
     return f"""  client{id}:
     container_name: client{id}
     image: client:latest
+    volumes:
+      - ./client/config.yaml:/config.yaml
     entrypoint: /client
     environment:
       - CLI_ID={id}
       - CLI_LOG_LEVEL=DEBUG
     networks:
       - testing_net
-    volumes:
-      - ./client/config.yaml:/config.yaml
     depends_on:
       - server
 """
