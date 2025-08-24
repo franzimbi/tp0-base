@@ -14,7 +14,7 @@ def crear_server():
     networks:
       - testing_net
     volumes:
-      - ./config/server/config.ini:/config.ini
+      - ./server/config.ini:/config.ini
 """
 
 def crear_cliente(id):
@@ -28,7 +28,7 @@ def crear_cliente(id):
     networks:
       - testing_net
     volumes:
-      - ./config/client/config.yaml:/config.yaml
+      - ./client/config.yaml:/config.yaml
     depends_on:
       - server
 """
