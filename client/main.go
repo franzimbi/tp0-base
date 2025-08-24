@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"syscall"
 	"strings"
 	"time"
 
@@ -113,13 +114,13 @@ func main() {
 
 	client := common.NewClient(clientConfig)
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+	channel := make(chan os.Signal, 1)
+	signal.Notify(channel, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		<-signalC
+		<-channel
 		log.Infof("action: close_socket | result: success")
-		client.close()
+		client.Close()
 		os.Exit(0)
 	}()
 
