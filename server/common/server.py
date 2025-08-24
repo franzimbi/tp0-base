@@ -13,6 +13,7 @@ class Server:
         if self._server_socket:
             self._server_socket.close()
             logging.info("action: close_socket | result: success")
+        exit(0)
 
     def run(self):
         """
