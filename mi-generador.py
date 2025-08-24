@@ -8,11 +8,10 @@ def crear_server():
     container_name: server
     image: server:latest
     volumes:
-      - ./server/config.ini:/config.ini
+      - ./server/config.ini:/config.ini 
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net
 """
@@ -26,7 +25,6 @@ def crear_cliente(id):
     entrypoint: /client
     environment:
       - CLI_ID={id}
-      - CLI_LOG_LEVEL=DEBUG
     networks:
       - testing_net
     depends_on:
