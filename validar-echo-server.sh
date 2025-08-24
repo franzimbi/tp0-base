@@ -1,11 +1,11 @@
 #!/bin/bash
 puerto=12345
 mensaje="hoy juega boca"
+red="tp0_testing_net"
 
-docker exec -it -rm --network testing_net alpine sh
+respuesta=$(docker run --rm --network "$red" alpine sh -c "echo '$mensaje' | nc server $puerto")
 
-respuesta=$(echo "$mensaje" | nc server $puerto)
-if ["$respuesta" == "$mensaje"]; then
+if [ "$respuesta" == "$mensaje" ]; then
     echo "action: test_echo_server | result: success"
 else
     echo "action: test_echo_server | result: fail"
