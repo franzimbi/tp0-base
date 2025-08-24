@@ -58,18 +58,6 @@ func (c *Client) StartClientLoop() {
 		// Create the connection the server in every loop iteration. Send an
 		c.createClientSocket()
 
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		go func() {
-			sig := <-sigs
-			log.Infof("action: close_socket | result: success")
-			if c.conn != nill{
-				c.conn.Close()
-			}
-			os.Exit(0)
-	}()
-
 		// TODO: Modify the send to avoid short-write
 		fmt.Fprintf(
 			c.conn,
@@ -98,4 +86,10 @@ func (c *Client) StartClientLoop() {
 
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+}
+
+func (c *Client) close() {
+	if c.conn != nil {
+		c.conn.Close()
+	}
 }

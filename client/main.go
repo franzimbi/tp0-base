@@ -111,5 +111,16 @@ func main() {
 	}
 
 	client := common.NewClient(clientConfig)
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+		go func() {
+			sig := <-sigs
+			log.Infof("action: close_socket | result: success")
+			client.close()
+			os.Exit(0)
+	}()
+	
 	client.StartClientLoop()
 }
