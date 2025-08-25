@@ -1,12 +1,8 @@
 package common
 
 import (
-	// "bufio"
-	// "fmt"
-	"encoding/binary"
-	"net"
 	"time"
-
+	"net"
 	"github.com/op/go-logging"
 )
 
@@ -23,7 +19,7 @@ type ClientConfig struct {
 // Client Entity that encapsulates how
 type Client struct {
 	config ClientConfig
-	conn   net.Conn
+	protocol  *Protocol
 }
 
 // NewClient Initializes a new client receiving the configuration
@@ -31,6 +27,7 @@ type Client struct {
 func NewClient(config ClientConfig) *Client {
 	client := &Client{
 		config: config,
+		protocol: nil,
 	}
 	return client
 }
@@ -47,88 +44,16 @@ func (c *Client) createClientSocket() error {
 			err,
 		)
 	}
-	c.conn = conn
+	c.protocol = NewProtocol(conn)
 	return nil
 }
-
-func fullWrite(client *Client, data []byte) (int) {
-	total := 0
-	for total < len(data) {
-		n, err := client.conn.Write(data[total:])
-		if err != nil {
-			log.Errorf("action: send_message | result: fail | client_id: %v | error: %v",
-				client.config.ID,
-				err,
-			)
-			return total
-		}
-		total += n
-	}
-	return total
-}
-
-func (c *Client) sendString(msg string) (int) {
-	buf := make([]byte, 1)
-	buf[0] = byte(len(msg))
-	n := fullWrite(c, buf)
-	if n != 1 {
-		return 0
-	}
-	n = fullWrite(c, []byte(msg))
-	return n
-}
-
-func (c *Client) sendInt(num uint32) (int) {
-	buf := make([]byte, 4)
-    binary.LittleEndian.PutUint32(buf, num)
-	n := fullWrite(c, buf)
-	if n == 4 {
-		return 0
-	}else{
-		return 1
-	}
-}
-// StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop(nombre string, apellido string, documento uint32, nacimiento string, numero uint32) {
-	// There is an autoincremental msgID to identify every message sent
-	// Messages if the message amount threshold has not been surpassed
-
-	// log.Infof("action: send_apuesta | result: in_process | client_id: %v | msg: %v - %v - %v",
-	// 		c.config.ID,
-	// 		nombre,
-	// 		apellido,
-	// 		numero,
-	// 	)
 	c.createClientSocket()
 
-	if c.sendString(nombre) != len(nombre) {
-		log.Errorf("action: receive_message | result: fail | client_id: %v | error: envio_nombre",
-			c.config.ID,
-		)
-		return
-	}
-	if c.sendString(apellido) != len(apellido) {
-		log.Errorf("action: receive_message | result: fail | client_id: %v | error: envio_apellido",
-			c.config.ID,
-		)
-		return
-	}
-	if c.sendInt(documento) != 0 {
-		log.Errorf("action: receive_message | result: fail | client_id: %v | error: envio_documento de %v",
-			c.config.ID,
-			documento,
-		)
-		return
-	}
-	if c.sendString(nacimiento) != len(nacimiento) {
-		log.Errorf("action: receive_message | result: fail | client_id: %v | error: envio_nacimiento",
-			c.config.ID,
-		)
-		return
-	}
-	if c.sendInt(numero) != 0 {
-		log.Errorf("action: receive_message | result: fail | client_id: %v | error: envio_numero",
-			c.config.ID,
+	err := c.protocol.sendBet(nombre, apellido, documento, nacimiento, numero)
+	if err != nil {
+		log.Errorf("action: apuesta_enviada | result: fail | error: %v",
+			err,
 		)
 		return
 	}
@@ -137,44 +62,8 @@ func (c *Client) StartClientLoop(nombre string, apellido string, documento uint3
 		documento,
 		numero,
 	)
-
-	
-	// for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
-	// 	// Create the connection the server in every loop iteration. Send an
-	// 	c.createClientSocket()
-
-	// 	// TODO: Modify the send to avoid short-write
-		// fmt.Fprintf(
-		// 	c.conn,
-		// 	"[CLIENT %v] Message N°%v\n",
-		// 	c.config.ID,
-		// 	msgID,
-		// )
-		// msg, err := bufio.NewReader(c.conn).ReadString('\n')
-		// c.conn.Close()
-
-	// 	if err != nil {
-	// 		log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v",
-	// 			c.config.ID,
-	// 			err,
-	// 		)
-	// 		return
-	// 	}
-
-		// log.Infof("action: receive_message | result: success | client_id: %v | msg: %v",
-		// 	c.config.ID,
-		// 	msg,
-		// )
-
-	// 	// Wait a time between sending one message and the next one
-	// 	time.Sleep(c.config.LoopPeriod)
-
-	// }
-	// log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
 
 func (c *Client) Close() {
-	if c.conn != nil {
-		c.conn.Close()
-	}
+	c.protocol.Close()
 }
