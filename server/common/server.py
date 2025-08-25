@@ -87,7 +87,7 @@ class Server:
             bet = utils.Bet("1", nombre, apellido, str(documento), nacimiento, str(numero))
             utils.store_bets([bet])
 
-            logging.info(f'action: recv_apuesta | result: success | dni: {documento} | numero: {numero}')
+            logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
 
             # client_sock.send('r') 
 

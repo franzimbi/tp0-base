@@ -131,4 +131,5 @@ func main() {
 	numero := uint32(v.GetInt("numero"))
 
 	client.StartClientLoop(nombre, apellido, documento, nacimiento, numero)
+	client.Close()
 }
