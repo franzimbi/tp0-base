@@ -44,7 +44,7 @@ func (c *Client) createClientSocket() error {
 			err,
 		)
 	}
-	c.protocol = NewProtocol(conn)
+	c.protocol = NewProtocol(conn) // esto lo dejo pq venia asi, pero si es por mi q se cree el Protocol adentro del cliente
 	return nil
 }
 func (c *Client) SendBet(nombre string, apellido string, documento uint32, nacimiento string, numero uint32) {

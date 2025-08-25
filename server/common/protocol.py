@@ -5,6 +5,7 @@ class Protocol:
         self.skt = socket
     
     def __recv_all(self, size):
+        ''' la forma de no tener un short read'''
         buf = b''
         while len(buf) < size:
             n = self.skt.recv(size - len(buf))

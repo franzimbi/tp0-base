@@ -16,6 +16,7 @@ func NewProtocol(skt net.Conn) *Protocol {
 }
 
 func (p *Protocol) FullWrite(data []byte ) (error) {
+	// la forma de no tener un short write
 	total := 0
 	for total < len(data) {
 		n, err := p.skt.Write(data[total:])

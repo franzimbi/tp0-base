@@ -20,13 +20,10 @@ class Server:
     def run(self):
         """
         Dummy Server loop
-
         Server that accept a new connections and establishes a
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-
-        # TODO: Modify this program to handle signal to graceful shutdown
         # the server
         signal.signal(signal.SIGTERM, self.graceful_shutdown)
         while True:
@@ -34,38 +31,12 @@ class Server:
             self.__handle_client_connection(protocol)
     
 
-    # def recv_all(self, socket, size):
-    #     buf = b''
-    #     while len(buf) < size:
-    #         n = socket.recv(size - len(buf))
-    #         if n == 0:
-    #             return None
-    #         buf += n
-    #     return buf
-
-    # def recv_int(self, socket):
-    #     buf = self.recv_all(socket, 4)
-    #     if buf is None:
-    #         return None
-    #     return int.from_bytes(buf, byteorder='little')
-    
-    # def recv_string(self, socket):
-    #     size = self.recv_all(socket, 1)
-    #     if size is None:
-    #         return None
-    #     size = int.from_bytes(size, byteorder='little')
-
-    #     string = self.recv_all(socket, size)
-    #     if string is None:
-    #         return None
-    #     return string.decode('utf-8')
-
     def __handle_client_connection(self, protocol):
         """
-        Read message from a specific client socket and closes the socket
+        Read message from a specific client protocol and closes the protocol
 
         If a problem arises in the communication with the client, the
-        client socket will also be closed
+        client protocol will also be closed
         """
         # logging.info('action: recv_apuesta | result: in_progress')
         try:
