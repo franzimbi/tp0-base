@@ -28,24 +28,6 @@ services:
     depends_on:
       - server
 
-  client2:
-    container_name: client2
-    image: client:latest
-    volumes:
-      - ./client/config.yaml:/config.yaml
-    entrypoint: /client
-    environment:
-      - CLI_ID=2
-      - CLI_NOMBRE=nombre2
-      - CLI_APELLIDO=apellido2
-      - CLI_DOCUMENTO=1002
-      - CLI_NACIMIENTO=1999-03-02
-      - CLI_NUMERO=7112
-    networks:
-      - testing_net
-    depends_on:
-      - server
-
 networks:
   testing_net:
     ipam:

@@ -2,6 +2,7 @@ import socket
 import logging
 import signal
 import common.utils as utils
+import protocol as protocol
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -29,8 +30,8 @@ class Server:
         # the server
         signal.signal(signal.SIGTERM, self.graceful_shutdown)
         while True:
-            client_sock = self.__accept_new_connection()
-            self.__handle_client_connection(client_sock)
+            protocol = self.__accept_new_connection()
+            self.__handle_client_connection(protocol)
     
 
     def recv_all(self, socket, size):
@@ -59,7 +60,7 @@ class Server:
             return None
         return string.decode('utf-8')
 
-    def __handle_client_connection(self, client_sock):
+    def __handle_client_connection(self, protocol):
         """
         Read message from a specific client socket and closes the socket
 
@@ -68,50 +69,21 @@ class Server:
         """
         # logging.info('action: recv_apuesta | result: in_progress')
         try:
-            nombre = self.recv_string(client_sock)
-            if nombre is None:
-                raise OSError("Client disconnected")
-            apellido = self.recv_string(client_sock)
-            if apellido is None:
-                raise OSError("Client disconnected")
-            documento = self.recv_int(client_sock)
-            if documento is None:
-                raise OSError("Client disconnected")
-            nacimiento = self.recv_string(client_sock)
-            if nacimiento is None:
-                raise OSError("Client disconnected")
-            numero = self.recv_int(client_sock)
-            if numero is None:
-                raise OSError("Client disconnected")
+            nombre, apellido, documento, nacimiento, numero = protocol.recv_bet()
 
             bet = utils.Bet("1", nombre, apellido, str(documento), nacimiento, str(numero))
             utils.store_bets([bet])
 
             logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
 
-            # client_sock.send('r') 
-
-            # # TODO: Modify the receive to avoid short-reads
-            # msg = client_sock.recv(1024).rstrip().decode('utf-8')
-            # addr = client_sock.getpeername()
-            # logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
-            # # TODO: Modify the send to avoid short-writes
-            # client_sock.send("{}\n".format(msg).encode('utf-8'))
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:
-            client_sock.close()
+            protocol.close()
 
     def __accept_new_connection(self):
-        """
-        Accept new connections
-
-        Function blocks until a connection to a client is made.
-        Then connection created is printed and returned
-        """
-
-        # Connection arrived
         logging.info('action: accept_connections | result: in_progress')
         c, addr = self._server_socket.accept()
+        protocol = protocol.Protocol(c)
         logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
-        return c
+        return protocol

@@ -47,7 +47,7 @@ func (c *Client) createClientSocket() error {
 	c.protocol = NewProtocol(conn)
 	return nil
 }
-func (c *Client) StartClientLoop(nombre string, apellido string, documento uint32, nacimiento string, numero uint32) {
+func (c *Client) SendBet(nombre string, apellido string, documento uint32, nacimiento string, numero uint32) {
 	c.createClientSocket()
 
 	err := c.protocol.sendBet(nombre, apellido, documento, nacimiento, numero)

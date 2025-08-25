@@ -131,6 +131,6 @@ func main() {
 	nacimiento := v.GetString("nacimiento")
 	numero := uint32(v.GetInt("numero"))
 
-	client.StartClientLoop(nombre, apellido, documento, nacimiento, numero)
+	client.SendBet(nombre, apellido, documento, nacimiento, numero)
 	client.Close()
 }

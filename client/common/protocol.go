@@ -20,10 +20,6 @@ func (p *Protocol) FullWrite(data []byte ) (error) {
 	for total < len(data) {
 		n, err := p.skt.Write(data[total:])
 		if err != nil {
-			// log.Errorf("action: send_message | result: fail | client_id: %v | error: %v",
-			// 	client.config.ID,
-			// 	err,
-			// )
 			return err
 		}
 		total += n
