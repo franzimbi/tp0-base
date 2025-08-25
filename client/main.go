@@ -124,5 +124,11 @@ func main() {
 		os.Exit(0)
 	}()
 
-	client.StartClientLoop()
+	nombre := v.GetString("nombre")
+	apellido := v.GetString("apellido")
+	documento := v.GetInt("documento")
+	nacimiento := v.GetString("nacimiento")
+	numero := v.GetInt("numero")
+
+	client.StartClientLoop(nombre, apellido, documento, nacimiento, numero)
 }

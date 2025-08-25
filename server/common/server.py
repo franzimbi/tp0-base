@@ -1,6 +1,7 @@
 import socket
 import logging
 import signal
+import common.utils as utils
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -30,7 +31,33 @@ class Server:
         while True:
             client_sock = self.__accept_new_connection()
             self.__handle_client_connection(client_sock)
-            
+    
+
+    def recv_all(self, socket, size):
+        buf = b''
+        while len(buf) < size:
+            n = socket.recv(size - len(buf))
+            if n == 0:
+                return None
+            buf += n
+        return buf
+
+    def recv_int(self, socket):
+        buf = self.recv_all(socket, 4)
+        if buf is None:
+            return None
+        return int.from_bytes(buf, byteorder='little')
+    
+    def recv_string(self, socket):
+        size = self.recv_all(socket, 1)
+        if size is None:
+            return None
+        size = int.from_bytes(size, byteorder='little')
+
+        string = self.recv_all(socket, size)
+        if string is None:
+            return None
+        return string.decode('utf-8')
 
     def __handle_client_connection(self, client_sock):
         """
@@ -40,12 +67,31 @@ class Server:
         client socket will also be closed
         """
         try:
-            # TODO: Modify the receive to avoid short-reads
-            msg = client_sock.recv(1024).rstrip().decode('utf-8')
-            addr = client_sock.getpeername()
-            logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
-            # TODO: Modify the send to avoid short-writes
-            client_sock.send("{}\n".format(msg).encode('utf-8'))
+            nombre = self.recv_string(client_sock)
+            if nombre is None:
+                raise OSError("Client disconnected")
+            apellido = self.recv_string(client_sock)
+            if apellido is None:
+                raise OSError("Client disconnected")
+            documento = self.recv_int(client_sock)
+            if documento is None:
+                raise OSError("Client disconnected")
+            nacimiento = self.recv_string(client_sock)
+            if nacimiento is None:
+                raise OSError("Client disconnected")
+            numero = self.recv_int(client_sock)
+            if numero is None:
+                raise OSError("Client disconnected")
+
+            bet = utils.Bet("1", nombre, apellido, str(documento), nacimiento, str(numero))
+            utils.store_bets([bet])
+
+            # # TODO: Modify the receive to avoid short-reads
+            # msg = client_sock.recv(1024).rstrip().decode('utf-8')
+            # addr = client_sock.getpeername()
+            # logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
+            # # TODO: Modify the send to avoid short-writes
+            # client_sock.send("{}\n".format(msg).encode('utf-8'))
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:
