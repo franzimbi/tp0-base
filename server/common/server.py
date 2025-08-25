@@ -2,7 +2,7 @@ import socket
 import logging
 import signal
 import common.utils as utils
-import protocol as protocol
+from common.protocol import Protocol
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -34,31 +34,31 @@ class Server:
             self.__handle_client_connection(protocol)
     
 
-    def recv_all(self, socket, size):
-        buf = b''
-        while len(buf) < size:
-            n = socket.recv(size - len(buf))
-            if n == 0:
-                return None
-            buf += n
-        return buf
+    # def recv_all(self, socket, size):
+    #     buf = b''
+    #     while len(buf) < size:
+    #         n = socket.recv(size - len(buf))
+    #         if n == 0:
+    #             return None
+    #         buf += n
+    #     return buf
 
-    def recv_int(self, socket):
-        buf = self.recv_all(socket, 4)
-        if buf is None:
-            return None
-        return int.from_bytes(buf, byteorder='little')
+    # def recv_int(self, socket):
+    #     buf = self.recv_all(socket, 4)
+    #     if buf is None:
+    #         return None
+    #     return int.from_bytes(buf, byteorder='little')
     
-    def recv_string(self, socket):
-        size = self.recv_all(socket, 1)
-        if size is None:
-            return None
-        size = int.from_bytes(size, byteorder='little')
+    # def recv_string(self, socket):
+    #     size = self.recv_all(socket, 1)
+    #     if size is None:
+    #         return None
+    #     size = int.from_bytes(size, byteorder='little')
 
-        string = self.recv_all(socket, size)
-        if string is None:
-            return None
-        return string.decode('utf-8')
+    #     string = self.recv_all(socket, size)
+    #     if string is None:
+    #         return None
+    #     return string.decode('utf-8')
 
     def __handle_client_connection(self, protocol):
         """
@@ -84,6 +84,6 @@ class Server:
     def __accept_new_connection(self):
         logging.info('action: accept_connections | result: in_progress')
         c, addr = self._server_socket.accept()
-        protocol = protocol.Protocol(c)
+        protocol = Protocol(c)
         logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
         return protocol

@@ -7,7 +7,7 @@ class Protocol:
     def __recv_all(self, size):
         buf = b''
         while len(buf) < size:
-            n = self.socket.recv(size - len(buf))
+            n = self.skt.recv(size - len(buf))
             if n == 0:
                 return None
             buf += n
