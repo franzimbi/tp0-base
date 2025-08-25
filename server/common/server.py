@@ -66,6 +66,7 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
+        # logging.info('action: recv_apuesta | result: in_progress')
         try:
             nombre = self.recv_string(client_sock)
             if nombre is None:
@@ -86,7 +87,7 @@ class Server:
             bet = utils.Bet("1", nombre, apellido, str(documento), nacimiento, str(numero))
             utils.store_bets([bet])
 
-            logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
+            logging.info(f'action: recv_apuesta | result: success | dni: {documento} | numero: {numero}')
 
             # client_sock.send('r') 
 

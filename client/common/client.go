@@ -51,7 +51,7 @@ func (c *Client) createClientSocket() error {
 	return nil
 }
 
-func fullWrite(client Client, data []byte) (int) {
+func fullWrite(client *Client, data []byte) (int) {
 	total := 0
 	for total < len(data) {
 		n, err := client.conn.Write(data[total:])
@@ -70,18 +70,18 @@ func fullWrite(client Client, data []byte) (int) {
 func (c *Client) sendString(msg string) (int) {
 	buf := make([]byte, 1)
 	buf[0] = byte(len(msg))
-	n := fullWrite(*c, buf)
+	n := fullWrite(c, buf)
 	if n != 1 {
 		return 0
 	}
-	n = fullWrite(*c, []byte(msg))
+	n = fullWrite(c, []byte(msg))
 	return n
 }
 
 func (c *Client) sendInt(num uint32) (int) {
 	buf := make([]byte, 4)
     binary.LittleEndian.PutUint32(buf, num)
-	n := fullWrite(*c, buf)
+	n := fullWrite(c, buf)
 	if n == 4 {
 		return 0
 	}else{
@@ -92,22 +92,44 @@ func (c *Client) sendInt(num uint32) (int) {
 func (c *Client) StartClientLoop(nombre string, apellido string, documento uint32, nacimiento string, numero uint32) {
 	// There is an autoincremental msgID to identify every message sent
 	// Messages if the message amount threshold has not been surpassed
-	
+
+	// log.Infof("action: send_apuesta | result: in_process | client_id: %v | msg: %v - %v - %v",
+	// 		c.config.ID,
+	// 		nombre,
+	// 		apellido,
+	// 		numero,
+	// 	)
 	c.createClientSocket()
 
 	if c.sendString(nombre) != len(nombre) {
+		log.Errorf("action: receive_message | result: fail | client_id: %v | error: envio_nombre",
+			c.config.ID,
+		)
 		return
 	}
 	if c.sendString(apellido) != len(apellido) {
+		log.Errorf("action: receive_message | result: fail | client_id: %v | error: envio_apellido",
+			c.config.ID,
+		)
 		return
 	}
-	if c.sendInt(documento) == 0 {
+	if c.sendInt(documento) != 0 {
+		log.Errorf("action: receive_message | result: fail | client_id: %v | error: envio_documento de %v",
+			c.config.ID,
+			documento,
+		)
 		return
 	}
 	if c.sendString(nacimiento) != len(nacimiento) {
+		log.Errorf("action: receive_message | result: fail | client_id: %v | error: envio_nacimiento",
+			c.config.ID,
+		)
 		return
 	}
-	if c.sendInt(numero) == 0 {
+	if c.sendInt(numero) != 0 {
+		log.Errorf("action: receive_message | result: fail | client_id: %v | error: envio_numero",
+			c.config.ID,
+		)
 		return
 	}
 
