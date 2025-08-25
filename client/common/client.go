@@ -110,6 +110,11 @@ func (c *Client) StartClientLoop(nombre string, apellido string, documento uint3
 		return
 	}
 
+	log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v",
+		documento,
+		numero,
+	)
+
 	
 	// for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
 	// 	// Create the connection the server in every loop iteration. Send an
@@ -133,10 +138,10 @@ func (c *Client) StartClientLoop(nombre string, apellido string, documento uint3
 	// 		return
 	// 	}
 
-	// 	log.Infof("action: receive_message | result: success | client_id: %v | msg: %v",
-	// 		c.config.ID,
-	// 		msg,
-	// 	)
+		// log.Infof("action: receive_message | result: success | client_id: %v | msg: %v",
+		// 	c.config.ID,
+		// 	msg,
+		// )
 
 	// 	// Wait a time between sending one message and the next one
 	// 	time.Sleep(c.config.LoopPeriod)

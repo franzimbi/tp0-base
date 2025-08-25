@@ -86,6 +86,10 @@ class Server:
             bet = utils.Bet("1", nombre, apellido, str(documento), nacimiento, str(numero))
             utils.store_bets([bet])
 
+            logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
+
+            # client_sock.send('r') 
+
             # # TODO: Modify the receive to avoid short-reads
             # msg = client_sock.recv(1024).rstrip().decode('utf-8')
             # addr = client_sock.getpeername()
