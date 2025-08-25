@@ -126,9 +126,9 @@ func main() {
 
 	nombre := v.GetString("nombre")
 	apellido := v.GetString("apellido")
-	documento := v.GetInt("documento")
+	documento := uint32(v.GetInt("documento"))
 	nacimiento := v.GetString("nacimiento")
-	numero := v.GetInt("numero")
+	numero := uint32(v.GetInt("numero"))
 
 	client.StartClientLoop(nombre, apellido, documento, nacimiento, numero)
 }

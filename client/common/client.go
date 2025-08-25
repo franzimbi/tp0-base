@@ -1,8 +1,9 @@
 package common
 
 import (
-	"bufio"
-	"fmt"
+	// "bufio"
+	// "fmt"
+	"encoding/binary"
 	"net"
 	"time"
 
@@ -69,20 +70,20 @@ func fullWrite(client Client, data []byte) (int) {
 func (c *Client) sendString(msg string) (int) {
 	buf := make([]byte, 1)
 	buf[0] = byte(len(msg))
-	n := fullWrite(c, buf)
+	n := fullWrite(*c, buf)
 	if n != 1 {
 		return 0
 	}
-	n = fullWrite(c, []byte(msg))
+	n = fullWrite(*c, []byte(msg))
 	return n
 }
 
-func (c *Client) sendInt() (error) {
-	 buf := make([]byte, 4)
-    binary.LittleEndian.PutUint32(buf, uint32(num))
-	n := fullWrite(c, buf)
+func (c *Client) sendInt(num uint32) (int) {
+	buf := make([]byte, 4)
+    binary.LittleEndian.PutUint32(buf, num)
+	n := fullWrite(*c, buf)
 	if n == 4 {
-		return nil
+		return 0
 	}else{
 		return 1
 	}
@@ -100,13 +101,13 @@ func (c *Client) StartClientLoop(nombre string, apellido string, documento uint3
 	if c.sendString(apellido) != len(apellido) {
 		return
 	}
-	if c.sendInt(documento) != nil {
+	if c.sendInt(documento) == 0 {
 		return
 	}
 	if c.sendString(nacimiento) != len(nacimiento) {
 		return
 	}
-	if c.sendInt(numero) != nil {
+	if c.sendInt(numero) == 0 {
 		return
 	}
 

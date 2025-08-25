@@ -28,7 +28,7 @@ def crear_cliente(id):
       - CLI_NOMBRE={'nombre' + str(id)}
       - CLI_APELLIDO={'apellido' + str(id)}
       - CLI_DOCUMENTO={1000 + id}
-      - CLI_NACIMIENTO = {'1999-03-' + str(id)}
+      - CLI_NACIMIENTO={'1999-03-' + str(id)}
       - CLI_NUMERO={7110+id}
     networks:
       - testing_net
