@@ -44,7 +44,7 @@ class Server:
 
             bet = utils.Bet("1", nombre, apellido, str(documento), nacimiento, str(numero))
             utils.store_bets([bet])
-
+            protocol.send_ack()
             logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
 
         except OSError as e:

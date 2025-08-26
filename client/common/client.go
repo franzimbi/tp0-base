@@ -1,8 +1,9 @@
 package common
 
 import (
-	"time"
 	"net"
+	"time"
+
 	"github.com/op/go-logging"
 )
 
@@ -18,15 +19,15 @@ type ClientConfig struct {
 
 // Client Entity that encapsulates how
 type Client struct {
-	config ClientConfig
-	protocol  *Protocol
+	config   ClientConfig
+	protocol *Protocol
 }
 
 // NewClient Initializes a new client receiving the configuration
 // as a parameter
 func NewClient(config ClientConfig) *Client {
 	client := &Client{
-		config: config,
+		config:   config,
 		protocol: nil,
 	}
 	return client
@@ -55,6 +56,10 @@ func (c *Client) SendBet(nombre string, apellido string, documento uint32, nacim
 		log.Errorf("action: apuesta_enviada | result: fail | error: %v",
 			err,
 		)
+		return
+	}
+	if c.protocol.RecvAck() != nil {
+		log.Errorf("action: apuesta_enviada | result: fail | error: no se recibió ack del servidor")
 		return
 	}
 

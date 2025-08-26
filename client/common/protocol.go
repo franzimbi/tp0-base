@@ -2,10 +2,11 @@ package common
 
 import (
 	"encoding/binary"
+	"fmt"
 	"net"
 )
 
-type Protocol struct{
+type Protocol struct {
 	skt net.Conn
 }
 
@@ -15,7 +16,7 @@ func NewProtocol(skt net.Conn) *Protocol {
 	}
 }
 
-func (p *Protocol) FullWrite(data []byte ) (error) {
+func (p *Protocol) FullWrite(data []byte) error {
 	// la forma de no tener un short write
 	total := 0
 	for total < len(data) {
@@ -52,8 +53,8 @@ func (p *Protocol) Close() {
 }
 
 func (p *Protocol) sendBet(nombre string, apellido string, documento uint32, nacimiento string, numero uint32) error {
-	
-	err := p.SendString(nombre) 
+
+	err := p.SendString(nombre)
 	if err != nil {
 		return err
 	}
@@ -72,6 +73,18 @@ func (p *Protocol) sendBet(nombre string, apellido string, documento uint32, nac
 	err = p.SendInt(numero)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (p *Protocol) RecvAck() error {
+	buf := make([]byte, 1)
+	_, err := p.skt.Read(buf)
+	if err != nil {
+		return err
+	}
+	if buf[0] != byte(1) {
+		return fmt.Errorf("ack no recibido")
 	}
 	return nil
 }

@@ -31,6 +31,10 @@ class Protocol:
             return None
         return string.decode('utf-8')
     
+    def send_ack(self):
+        self.skt.sendall(b'\x01')
+        return
+    
     def recv_bet(self):
         nombre = self.recv_string()
         if nombre is None:
