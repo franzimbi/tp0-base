@@ -64,7 +64,7 @@ class Protocol:
     def recv_bets(self):
         count = self.recv_int()
         if count is None:
-            raise OSError("Client disconnected")        
+            (None, 0)       
         bets = []
         for _ in range(count):
             bet = self._recv_bet()

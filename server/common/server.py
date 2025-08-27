@@ -43,6 +43,9 @@ class Server:
         while True:
             try:
                 bets, size_expected = protocol.recv_bets()
+                if bets is None:
+                    logging.info(f'action: client_disconnected | agency: {agency_id}')
+                    break
                 if size_expected != len(bets):
                     logging.error(f"action: apuesta_recibida | result: fail | cantidad: {len(bets)}")
                     protocol.send_errorApuesta()
@@ -57,10 +60,10 @@ class Server:
                     logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
 
             except OSError as e:
-                # logging.error("action: socket_closed | result: {e}")
+                logging.error("action: socket_closed | result: {e}")
                 return
-            # finally:
-            #     protocol.close()
+            finally:
+                protocol.close()
 
     def __accept_new_connection(self):
         logging.info('action: accept_connections | result: in_progress')
