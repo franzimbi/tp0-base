@@ -108,6 +108,9 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 			} else {
 				bets = make([]Bet, 0)
 			}
+			if c.protocol.RecvAck() != nil {
+				log.Infof("action: recv_ack | result: fail")
+			}
 		}
 
 	}
@@ -117,6 +120,9 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 			log.Errorf("action: send_chunck | result: error | err: %s", err)
 		} else {
 			log.Infof("action: send_chuncks | result: success")
+		}
+		if c.protocol.RecvAck() != nil {
+			log.Infof("action: recv_ack | result: fail")
 		}
 	}
 }
