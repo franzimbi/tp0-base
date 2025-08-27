@@ -2,7 +2,7 @@ package common
 
 import (
 	"encoding/binary"
-	// "fmt"
+	"fmt"
 	"net"
 )
 
@@ -89,17 +89,17 @@ func (p *Protocol) Close() {
 // 	return nil
 // }
 
-// func (p *Protocol) RecvAck() error {
-// 	buf := make([]byte, 1)
-// 	_, err := p.skt.Read(buf)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if buf[0] != byte(1) {
-// 		return fmt.Errorf("ack no recibido")
-// 	}
-// 	return nil
-// }
+func (p *Protocol) RecvAck() error {
+	buf := make([]byte, 1)
+	_, err := p.skt.Read(buf)
+	if err != nil {
+		return err
+	}
+	if buf[0] != byte(1) {
+		return fmt.Errorf("error de ultimo chunck recibido")
+	}
+	return nil
+}
 
 func ui32ToLittleEndianBytes(num uint32) []byte {
 	buf := make([]byte, 4)

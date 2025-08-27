@@ -35,6 +35,10 @@ class Protocol:
         self.skt.sendall(b'\x01')
         return
     
+    def send_errorApuesta(self):
+        self.skt.sendall(b'\x02')
+        return
+    
     def _recv_bet(self):
         nombre = self.recv_string()
         if nombre is None:

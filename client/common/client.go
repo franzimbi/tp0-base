@@ -100,7 +100,7 @@ func (c *Client) SendBets(filePath string, agencyID uint32) {
 		if len(bets) >= 10 {
 			sent, err := c.protocol.SendBetsOnChunks(bets)
 			if err != nil {
-				log.Infof("action: send_chunck | result: fail")
+				log.Infof("action: send_chunck | result: fail | err: %s", err)
 				return
 			}
 			if sent < len(bets) {
@@ -109,6 +109,7 @@ func (c *Client) SendBets(filePath string, agencyID uint32) {
 				bets = make([]Bet, 0)
 			}
 		}
+
 	}
 	if len(bets) > 0 {
 		_, err := c.protocol.SendBetsOnChunks(bets)

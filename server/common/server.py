@@ -40,13 +40,15 @@ class Server:
         """
         agency_id = str(protocol.recv_agency_id())
 
-        while protocol:
+        while True:
             try:
                 bets, size_expected = protocol.recv_bets()
                 if size_expected != len(bets):
                     logging.error(f"action: apuesta_recibida | result: fail | cantidad: {len(bets)}")
+                    protocol.send_errorApuesta()
                 else:
                     logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
+                    protocol.send_ack()
 
                 for bet in bets:
                     (nombre, apellido, documento, nacimiento, numero) = bet
@@ -55,7 +57,7 @@ class Server:
                     logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
 
             except OSError as e:
-                logging.error("action: socket_closed | result: {e}")
+                # logging.error("action: socket_closed | result: {e}")
                 return
             # finally:
             #     protocol.close()
