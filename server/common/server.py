@@ -62,8 +62,7 @@ class Server:
             except OSError as e:
                 logging.error(f"action: socket_closed | result: {e}")
                 return
-            finally:
-                protocol.close()
+        protocol.close()
 
     def __accept_new_connection(self):
         logging.info('action: accept_connections | result: in_progress')
