@@ -22,6 +22,7 @@ def crear_cliente(id):
     image: client:latest
     volumes:
       - ./client/config.yaml:/config.yaml
+      - ./.data/agency-{id}.csv:/agency.csv
     entrypoint: /client
     environment:
       - CLI_ID={id}

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"syscall"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/op/go-logging"
@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common"
-	
 )
 
 var log = logging.MustGetLogger("log")
@@ -125,12 +124,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	nombre := v.GetString("nombre")
-	apellido := v.GetString("apellido")
-	documento := uint32(v.GetInt("documento"))
-	nacimiento := v.GetString("nacimiento")
-	numero := uint32(v.GetInt("numero"))
+	client.SendBets("agency.csv")
 
-	client.SendBet(nombre, apellido, documento, nacimiento, numero)
 	client.Close()
 }

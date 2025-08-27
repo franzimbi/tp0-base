@@ -10,6 +10,18 @@ type Protocol struct {
 	skt net.Conn
 }
 
+const MaxDataSizekB = 8
+
+const MaxDataSize = MaxDataSizekB * 1024
+
+type Bet struct {
+	nombre     string
+	apellido   string
+	documento  uint32
+	nacimiento string
+	numero     uint32
+}
+
 func NewProtocol(skt net.Conn) *Protocol {
 	return &Protocol{
 		skt: skt,
@@ -52,30 +64,30 @@ func (p *Protocol) Close() {
 	}
 }
 
-func (p *Protocol) sendBet(nombre string, apellido string, documento uint32, nacimiento string, numero uint32) error {
+// func (p *Protocol) sendBet(nombre string, apellido string, documento uint32, nacimiento string, numero uint32) error {
 
-	err := p.SendString(nombre)
-	if err != nil {
-		return err
-	}
-	err = p.SendString(apellido)
-	if err != nil {
-		return err
-	}
-	err = p.SendInt(documento)
-	if err != nil {
-		return err
-	}
-	err = p.SendString(nacimiento)
-	if err != nil {
-		return err
-	}
-	err = p.SendInt(numero)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// 	err := p.SendString(nombre)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = p.SendString(apellido)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = p.SendInt(documento)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = p.SendString(nacimiento)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = p.SendInt(numero)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func (p *Protocol) RecvAck() error {
 	buf := make([]byte, 1)
@@ -87,4 +99,42 @@ func (p *Protocol) RecvAck() error {
 		return fmt.Errorf("ack no recibido")
 	}
 	return nil
+}
+
+func ui32ToLittleEndianBytes(num uint32) []byte {
+	buf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(buf, num)
+	return buf
+}
+
+func stringToBytes(s string) []byte {
+	var buf = make([]byte, 0)
+	buf = append(buf, byte(len(s)))
+	buf = append(buf, []byte(s)...)
+	return buf
+}
+
+func (p *Protocol) betToBytes(bet Bet) []byte {
+	var buf = make([]byte, 0)
+	buf = append(buf, stringToBytes(bet.nombre)...)
+	buf = append(buf, stringToBytes(bet.apellido)...)
+	buf = append(buf, ui32ToLittleEndianBytes(bet.documento)...)
+	buf = append(buf, stringToBytes(bet.nacimiento)...)
+	buf = append(buf, ui32ToLittleEndianBytes(bet.numero)...)
+	return buf
+}
+
+func (p *Protocol) SendBetsOnChunks(bets []Bet) (int, error) {
+	chunk := make([]byte, 0)
+	bets_counter := 0
+	for _, v := range bets {
+		data := p.betToBytes(v)
+		if len(chunk)+len(data) > MaxDataSize {
+			break
+		}
+		chunk = append(chunk, data...)
+		bets_counter += 1
+	}
+	err := p.FullWrite(chunk)
+	return bets_counter, err
 }
