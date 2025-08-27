@@ -54,7 +54,7 @@ func (c *Client) createClientSocket() error {
 	c.protocol = NewProtocol(conn) // esto lo dejo pq venia asi, pero si es por mi q se cree el Protocol adentro del cliente
 	return nil
 }
-func (c *Client) SendBets(filePath string, agencyID uint32) {
+func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) {
 	c.createClientSocket()
 
 	if c.protocol.SendAgencyID(agencyID) != nil {
@@ -97,7 +97,7 @@ func (c *Client) SendBets(filePath string, agencyID uint32) {
 		}
 		bets = append(bets, bet)
 
-		if len(bets) >= 10 {
+		if len(bets) >= maxBatchAmount {
 			sent, err := c.protocol.SendBetsOnChunks(bets)
 			if err != nil {
 				log.Infof("action: send_chunck | result: fail | err: %s", err)
