@@ -60,7 +60,7 @@ class Server:
                     logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
 
             except OSError as e:
-                logging.error("action: socket_closed | result: {e}")
+                logging.error(f"action: socket_closed | result: {e}")
                 return
             finally:
                 protocol.close()
