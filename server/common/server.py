@@ -50,7 +50,7 @@ class Server:
                 #     (nombre, apellido, documento, nacimiento, numero) = bet
                 #     bet = utils.Bet(agency_id, nombre, apellido, str(documento), nacimiento, str(numero))
                 utils.store_bets(bets)
-                logging.info(f'action: apuesta_recibida | result: success |  cantidad: ${len(bets)}')
+                logging.info(f'action: apuesta_recibida | result: success |  cantidad: {len(bets)}')
                 protocol.send_ack()
 
             except OSError as e:
