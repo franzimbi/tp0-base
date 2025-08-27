@@ -44,9 +44,9 @@ class Server:
             try:
                 bets, size_expected = protocol.recv_bets()
                 if size_expected != len(bets):
-                    logging.error(f"action: apuesta_recibida | result: fail | cantidad: ${len(bets)}")
+                    logging.error(f"action: apuesta_recibida | result: fail | cantidad: {len(bets)}")
                 else:
-                    logging.info(f'action: apuesta_recibida | result: success | cantidad: ${len(bets)}')
+                    logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
 
                 for bet in bets:
                     (nombre, apellido, documento, nacimiento, numero) = bet
