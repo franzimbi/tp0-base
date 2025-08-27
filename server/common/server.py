@@ -46,12 +46,12 @@ class Server:
                     break
                 bets = protocol.recv_bets(agency_id)
                 # bets_fine = True
-                for bet in bets:
-                    (nombre, apellido, documento, nacimiento, numero) = bet
-                    bet = utils.Bet(agency_id, nombre, apellido, str(documento), nacimiento, str(numero))
-                    utils.store_bets(bet)
-                    logging.info(f'action: apuesta_recibida | result: success |  cantidad: ${len(bets)}')
-                    protocol.send_ack()
+                # for bet in bets:
+                #     (nombre, apellido, documento, nacimiento, numero) = bet
+                #     bet = utils.Bet(agency_id, nombre, apellido, str(documento), nacimiento, str(numero))
+                utils.store_bets(bets)
+                logging.info(f'action: apuesta_recibida | result: success |  cantidad: ${len(bets)}')
+                protocol.send_ack()
 
             except OSError as e:
                 logging.error(f"action: socket_closed | result: {e}")

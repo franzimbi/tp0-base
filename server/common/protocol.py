@@ -64,7 +64,7 @@ class Protocol:
         return self.recv_int()
     
     def continue_recv_chuncks(self):
-        buf =  self.skt.__recv_all(1)
+        buf =  self.__recv_all(1)
         if buf is None:
             raise OSError("Client disconnected")
         if buf == b'\x00':
