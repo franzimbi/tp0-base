@@ -2,7 +2,6 @@ package common
 
 import (
 	"encoding/binary"
-	"fmt"
 	"net"
 )
 
@@ -48,15 +47,15 @@ func (p *Protocol) SendInt(num uint32) error {
 	return err
 }
 
-func (p *Protocol) SendString(msg string) error {
-	buf := make([]byte, 1)
-	buf[0] = byte(len(msg))
-	err := p.FullWrite(buf)
-	if err != nil {
-		return err
-	}
-	return p.FullWrite([]byte(msg))
-}
+// func (p *Protocol) SendString(msg string) error {
+// 	buf := make([]byte, 1)
+// 	buf[0] = byte(len(msg))
+// 	err := p.FullWrite(buf)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return p.FullWrite([]byte(msg))
+// }
 
 func (p *Protocol) Close() {
 	if p.skt != nil {
@@ -89,16 +88,24 @@ func (p *Protocol) Close() {
 // 	return nil
 // }
 
-func (p *Protocol) RecvAck() error {
+func (p *Protocol) ReceivedCodeOfConfirmation() (bool, error) {
 	buf := make([]byte, 1)
-	_, err := p.skt.Read(buf)
-	if err != nil {
-		return err
+	n, err := p.skt.Read(buf)
+	if err == nil && buf[0] == byte(0) && n == 1 {
+		return true, err
 	}
-	if buf[0] != byte(1) {
-		return fmt.Errorf("error de ultimo chunck recibido")
-	}
-	return nil
+	return false, err
+}
+
+func (c *Protocol) SendCodeToStartSendingChuncks() error {
+	buf := make([]byte, 1)
+	buf[0] = byte(0)
+	return c.FullWrite(buf)
+}
+func (c *Protocol) SendCodeToFinishSendingChuncks() error {
+	buf := make([]byte, 1)
+	buf[0] = byte(1)
+	return c.FullWrite(buf)
 }
 
 func ui32ToLittleEndianBytes(num uint32) []byte {
@@ -130,6 +137,7 @@ func (p *Protocol) betToBytes(bet Bet) []byte {
 }
 
 func (p *Protocol) SendBetsOnChunks(bets []Bet) (int, error) {
+	p.SendCodeToStartSendingChuncks()
 	chunk := make([]byte, 0)
 	bets_counter := 0
 	for _, v := range bets {

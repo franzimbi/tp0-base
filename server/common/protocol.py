@@ -1,5 +1,7 @@
 import socket
 
+from common.utils import Bet
+
 class Protocol:
     def __init__(self, socket: socket.socket):
         self.skt = socket
@@ -32,7 +34,7 @@ class Protocol:
         return string.decode('utf-8')
     
     def send_ack(self):
-        self.skt.sendall(b'\x01')
+        self.skt.sendall(b'\x00')
         return
     
     def send_errorApuesta(self):
@@ -60,18 +62,25 @@ class Protocol:
     
     def recv_agency_id(self):
         return self.recv_int()
+    
+    def continue_recv_chuncks(self):
+        buf =  self.skt.__recv_all(1)
+        if buf is None:
+            raise OSError("Client disconnected")
+        if buf == b'\x00':
+            return True
+        else:
+            return False
 
-    def recv_bets(self):
+    def recv_bets(self, agency_id):
         count = self.recv_int()
         if count is None:
-            (None, 0)       
+            raise OSError("Client disconnected")  
         bets = []
         for _ in range(count):
             bet = self._recv_bet()
-            if bet is None:
-                continue
-            bets.append(bet)
-        return (bets, count)
+            bets.append(Bet(agency_id, bet[0], bet[1], str(bet[2]), bet[3], str(bet[4])))
+        return bets
     
     def close(self):
         if self.skt is not None:

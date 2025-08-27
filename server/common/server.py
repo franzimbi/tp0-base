@@ -42,22 +42,16 @@ class Server:
 
         while True:
             try:
-                bets, size_expected = protocol.recv_bets()
-                if bets is None:
-                    logging.info(f'action: client_disconnected | agency: {agency_id}')
+                if not protocol.continue_recv_chuncks():
                     break
-                if size_expected != len(bets):
-                    logging.error(f"action: apuesta_recibida | result: fail | cantidad: {len(bets)}")
-                    protocol.send_errorApuesta()
-                else:
-                    logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
-                    protocol.send_ack()
-
+                bets = protocol.recv_bets(agency_id)
+                # bets_fine = True
                 for bet in bets:
                     (nombre, apellido, documento, nacimiento, numero) = bet
                     bet = utils.Bet(agency_id, nombre, apellido, str(documento), nacimiento, str(numero))
-                    utils.store_bets([bet])
-                    logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
+                    utils.store_bets(bet)
+                    logging.info(f'action: apuesta_recibida | result: success |  cantidad: ${len(bets)}')
+                    protocol.send_ack()
 
             except OSError as e:
                 logging.error(f"action: socket_closed | result: {e}")

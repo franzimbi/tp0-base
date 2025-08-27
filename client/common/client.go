@@ -57,14 +57,17 @@ func (c *Client) createClientSocket() error {
 func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) {
 	c.createClientSocket()
 
-	if c.protocol.SendAgencyID(agencyID) != nil {
-		log.Criticalf("action: send_agency_id | result: fail | agency_id: %d", agencyID)
+	err := c.protocol.SendAgencyID(agencyID)
+
+	if err != nil {
+		log.Criticalf("action: send_agency_id | result: fail | agency_id: %d, error: %s", agencyID, err)
 		return
 	}
 
 	f, err := os.Open(filePath)
 	if err != nil {
-		log.Criticalf("%s", err)
+		log.Criticalf("action: open file | result: fail | error: %s", err)
+		return
 	}
 	defer f.Close()
 
@@ -108,8 +111,9 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 			} else {
 				bets = make([]Bet, 0)
 			}
-			if c.protocol.RecvAck() != nil {
-				log.Infof("action: recv_ack | result: fail")
+			ok, _ := c.protocol.ReceivedCodeOfConfirmation()
+			if !ok {
+				log.Infof("action: answer_of_chunck | result: fail")
 			}
 		}
 
@@ -118,13 +122,18 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 		_, err := c.protocol.SendBetsOnChunks(bets)
 		if err != nil {
 			log.Errorf("action: send_chunck | result: error | err: %s", err)
-		} else {
-			log.Infof("action: send_chuncks | result: success")
 		}
-		if c.protocol.RecvAck() != nil {
-			log.Infof("action: recv_ack | result: fail")
+		ok, _ := c.protocol.ReceivedCodeOfConfirmation()
+		if !ok {
+			log.Infof("action: answer_of_chunck | result: fail")
 		}
 	}
+	log.Infof("action: sent_all_bets | result: success")
+	err = c.protocol.SendCodeToFinishSendingChuncks()
+	if err != nil {
+		log.Errorf("action: send_end_code | result: error | err: %s", err)
+	}
+
 }
 
 func (c *Client) Close() {
