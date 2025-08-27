@@ -124,7 +124,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	client.SendBets("agency.csv")
+	client.SendBets("agency.csv", uint32(v.GetInt("id")))
 
 	client.Close()
 }

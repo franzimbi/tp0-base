@@ -38,19 +38,27 @@ class Server:
         If a problem arises in the communication with the client, the
         client protocol will also be closed
         """
-        # logging.info('action: recv_apuesta | result: in_progress')
-        try:
-            nombre, apellido, documento, nacimiento, numero = protocol.recv_bet()
+        agency_id = str(protocol.recv_agency_id())
 
-            bet = utils.Bet("1", nombre, apellido, str(documento), nacimiento, str(numero))
-            utils.store_bets([bet])
-            protocol.send_ack()
-            logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
+        while protocol:
+            try:
+                bets, size_expected = protocol.recv_bets()
+                if size_expected != len(bets):
+                    logging.error(f"action: apuesta_recibida | result: fail | cantidad: ${len(bets)}")
+                else:
+                    logging.info(f'action: apuesta_recibida | result: success | cantidad: ${len(bets)}')
 
-        except OSError as e:
-            logging.error("action: receive_message | result: fail | error: {e}")
-        finally:
-            protocol.close()
+                for bet in bets:
+                    (nombre, apellido, documento, nacimiento, numero) = bet
+                    bet = utils.Bet(agency_id, nombre, apellido, str(documento), nacimiento, str(numero))
+                    utils.store_bets([bet])
+                    logging.info(f'action: apuesta_almacenada | result: success | dni: {documento} | numero: {numero}')
+
+            except OSError as e:
+                logging.error("action: socket_closed | result: {e}")
+                return
+            # finally:
+            #     protocol.close()
 
     def __accept_new_connection(self):
         logging.info('action: accept_connections | result: in_progress')

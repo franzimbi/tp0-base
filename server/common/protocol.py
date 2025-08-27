@@ -35,7 +35,7 @@ class Protocol:
         self.skt.sendall(b'\x01')
         return
     
-    def recv_bet(self):
+    def _recv_bet(self):
         nombre = self.recv_string()
         if nombre is None:
             raise OSError("Client disconnected")
@@ -53,6 +53,21 @@ class Protocol:
             raise OSError("Client disconnected")
         
         return (nombre, apellido, documento, nacimiento, numero)
+    
+    def recv_agency_id(self):
+        return self.recv_int()
+
+    def recv_bets(self):
+        count = self.recv_int()
+        if count is None:
+            raise OSError("Client disconnected")        
+        bets = []
+        for _ in range(count):
+            bet = self._recv_bet()
+            if bet is None:
+                continue
+            bets.append(bet)
+        return (bets, count)
     
     def close(self):
         if self.skt is not None:

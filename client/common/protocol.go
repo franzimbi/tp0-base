@@ -2,7 +2,7 @@ package common
 
 import (
 	"encoding/binary"
-	"fmt"
+	// "fmt"
 	"net"
 )
 
@@ -12,7 +12,7 @@ type Protocol struct {
 
 const MaxDataSizekB = 8
 
-const MaxDataSize = MaxDataSizekB * 1024
+const MaxDataSize = (MaxDataSizekB * 1024) - 4 // le resto 4 bytes para el size del chunk
 
 type Bet struct {
 	nombre     string
@@ -89,22 +89,27 @@ func (p *Protocol) Close() {
 // 	return nil
 // }
 
-func (p *Protocol) RecvAck() error {
-	buf := make([]byte, 1)
-	_, err := p.skt.Read(buf)
-	if err != nil {
-		return err
-	}
-	if buf[0] != byte(1) {
-		return fmt.Errorf("ack no recibido")
-	}
-	return nil
-}
+// func (p *Protocol) RecvAck() error {
+// 	buf := make([]byte, 1)
+// 	_, err := p.skt.Read(buf)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if buf[0] != byte(1) {
+// 		return fmt.Errorf("ack no recibido")
+// 	}
+// 	return nil
+// }
 
 func ui32ToLittleEndianBytes(num uint32) []byte {
 	buf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(buf, num)
 	return buf
+}
+
+func (p *Protocol) SendAgencyID(agencyID uint32) error {
+	err := p.SendInt(agencyID)
+	return err
 }
 
 func stringToBytes(s string) []byte {
@@ -135,6 +140,7 @@ func (p *Protocol) SendBetsOnChunks(bets []Bet) (int, error) {
 		chunk = append(chunk, data...)
 		bets_counter += 1
 	}
-	err := p.FullWrite(chunk)
+	sizeFinalChunck := ui32ToLittleEndianBytes(uint32(bets_counter))
+	err := p.FullWrite(append(sizeFinalChunck, chunk...))
 	return bets_counter, err
 }

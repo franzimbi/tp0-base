@@ -54,8 +54,13 @@ func (c *Client) createClientSocket() error {
 	c.protocol = NewProtocol(conn) // esto lo dejo pq venia asi, pero si es por mi q se cree el Protocol adentro del cliente
 	return nil
 }
-func (c *Client) SendBets(filePath string) {
+func (c *Client) SendBets(filePath string, agencyID uint32) {
 	c.createClientSocket()
+
+	if c.protocol.SendAgencyID(agencyID) != nil {
+		log.Criticalf("action: send_agency_id | result: fail | agency_id: %d", agencyID)
+		return
+	}
 
 	f, err := os.Open(filePath)
 	if err != nil {
