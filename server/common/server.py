@@ -45,10 +45,7 @@ class Server:
                 if not protocol.continue_recv_chuncks():
                     break
                 bets = protocol.recv_bets(agency_id)
-                # bets_fine = True
-                # for bet in bets:
-                #     (nombre, apellido, documento, nacimiento, numero) = bet
-                #     bet = utils.Bet(agency_id, nombre, apellido, str(documento), nacimiento, str(numero))
+
                 utils.store_bets(bets)
                 logging.info(f'action: apuesta_recibida | result: success |  cantidad: {len(bets)}')
                 protocol.send_ack()
