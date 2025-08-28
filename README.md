@@ -178,3 +178,20 @@ Se espera que se redacte una sección del README en donde se indique cómo ejecu
 Se proveen [pruebas automáticas](https://github.com/7574-sistemas-distribuidos/tp0-tests) de caja negra. Se exige que la resolución de los ejercicios pase tales pruebas, o en su defecto que las discrepancias sean justificadas y discutidas con los docentes antes del día de la entrega. El incumplimiento de las pruebas es condición de desaprobación, pero su cumplimiento no es suficiente para la aprobación. Respetar las entradas de log planteadas en los ejercicios, pues son las que se chequean en cada uno de los tests.
 
 La corrección personal tendrá en cuenta la calidad del código entregado y casos de error posibles, se manifiesten o no durante la ejecución del trabajo práctico. Se pide a los alumnos leer atentamente y **tener en cuenta** los criterios de corrección informados  [en el campus](https://campusgrado.fi.uba.ar/mod/page/view.php?id=73393).
+
+### Detalles de resolucion
+
+## ejercicio 5
+
+Para esta ejercicio, donde un cliente manda una sola apuesta, cree una clase llamada protocol tanto en client como en server para poder encapsular la logica de serializacion y de envio de bytes crudos a traves del socket.
+
+La tira de bytes que representan un bet se compone como:
+
+|1 byte| |string nombre| |1 byte| |string apellido| |4bytes documento| |1 byte| |string nacimiento| |4bytes numero|
+
+Donde el primer byte de cada string representa la cantidad de caracteres que van a venir en el proximo string. de esta forma tenemos la ventaja de que el string de nombre, apellido y nacimiento sean dinamicos. La desventaja es que solo puedo mandar 255 caracteres, pero dado la naturaleza de los nombres propios y del formato fecha, esto no seria una limitacion.
+
+Posteriormente el Servidor envia un codigo 0x01 (llamado ack) para confirmar la recepcion y guardado de la apuesta.
+
+Despues de recibir el ack el cliente cierra su socket, y del lado del servidor se cierra despues de mandar el ack al cliente para esperar conexiones nuevas posteriormente.
+
