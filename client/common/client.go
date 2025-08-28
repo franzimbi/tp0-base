@@ -2,6 +2,7 @@ package common
 
 import (
 	"bufio"
+	"errors"
 	"net"
 	"os"
 	"strconv"
@@ -54,18 +55,58 @@ func (c *Client) createClientSocket() error {
 	c.protocol = NewProtocol(conn) // esto lo dejo pq venia asi, pero si es por mi q se cree el Protocol adentro del cliente
 	return nil
 }
+
+func parseBet(line string) (Bet, error) {
+	content := strings.Split(line, ",")
+	if len(content) != TOTAL_FIELDS_BET {
+		log.Warningf("action: parse_bet | result: invalid_format | line: %s", line)
+		return Bet{}, errors.New("invalid format")
+	}
+	documento, err := strconv.ParseUint(content[2], 10, 32)
+	if err != nil {
+		log.Warningf("action: parse_bet | result: invalid_document | line: %s", line)
+		return Bet{}, errors.New("invalid format")
+	}
+	numero, err := strconv.ParseUint(content[4], 10, 32)
+	if err != nil {
+		log.Warningf("action: parse_bet | result: invalid_number | line: %s", line)
+		return Bet{}, errors.New("invalid format")
+	}
+	bet := Bet{
+		nombre:     content[0],
+		apellido:   content[1],
+		documento:  uint32(documento),
+		nacimiento: content[3],
+		numero:     uint32(numero),
+	}
+	return bet, nil
+}
+
+func (c *Client) sendChucksAndReceiveConfirmation(bets []Bet) (int, error) {
+	sent, err := c.protocol.SendBetsOnChunks(bets)
+	if err != nil {
+		log.Errorf("action: send_chunck | result: fail | err: %s", err)
+		return 0, err
+	}
+	ok, _ := c.protocol.ReceivedCodeOfConfirmation()
+	if !ok {
+		log.Infof("action: answer_of_chunck | result: fail")
+	}
+	return sent, nil
+}
+
 func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) {
 	c.createClientSocket()
 
 	err := c.protocol.SendAgencyID(agencyID)
 	if err != nil {
-		log.Criticalf("action: send_agency_id | result: fail | agency_id: %d, error: %s", agencyID, err)
+		log.Warningf("action: send_agency_id | result: fail | agency_id: %d, error: %s", agencyID, err)
 		return
 	}
 
 	f, err := os.Open(filePath)
 	if err != nil {
-		log.Criticalf("action: open file | result: fail | error: %s", err)
+		log.Warningf("action: open file | result: fail | error: %s", err)
 		return
 	}
 	defer f.Close()
@@ -75,34 +116,15 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		content := strings.Split(line, ",")
-		if len(content) != TOTAL_FIELDS_BET {
-			log.Warningf("action: parse_bet | result: invalid_format | line: %s", line)
-			continue
-		}
-		documento, err := strconv.ParseUint(content[2], 10, 32)
+		bet, err := parseBet(line)
 		if err != nil {
-			log.Warningf("action: parse_bet | result: invalid_document | line: %s", line)
 			continue
-		}
-		numero, err := strconv.ParseUint(content[4], 10, 32)
-		if err != nil {
-			log.Warningf("action: parse_bet | result: invalid_number | line: %s", line)
-			continue
-		}
-		bet := Bet{
-			nombre:     content[0],
-			apellido:   content[1],
-			documento:  uint32(documento),
-			nacimiento: content[3],
-			numero:     uint32(numero),
 		}
 		bets = append(bets, bet)
 
 		if len(bets) >= maxBatchAmount {
-			sent, err := c.protocol.SendBetsOnChunks(bets)
+			sent, err := c.sendChucksAndReceiveConfirmation(bets)
 			if err != nil {
-				log.Infof("action: send_chunck | result: fail | err: %s", err)
 				return
 			}
 			if sent < len(bets) {
@@ -110,22 +132,12 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 			} else {
 				bets = make([]Bet, 0)
 			}
-			ok, _ := c.protocol.ReceivedCodeOfConfirmation()
-			if !ok {
-				log.Infof("action: answer_of_chunck | result: fail")
-			}
 		}
-
 	}
 	if len(bets) > 0 {
-		_, err := c.protocol.SendBetsOnChunks(bets)
+		_, err := c.sendChucksAndReceiveConfirmation(bets)
 		if err != nil {
-			log.Errorf("action: send_chunck | result: fail | err: %s", err)
-		}
-
-		ok, _ := c.protocol.ReceivedCodeOfConfirmation()
-		if !ok {
-			log.Infof("action: answer_of_chunck | result: fail")
+			return
 		}
 	}
 	err = c.protocol.SendCodeToFinishSendingChuncks()
