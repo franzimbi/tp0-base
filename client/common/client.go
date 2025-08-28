@@ -58,7 +58,6 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 	c.createClientSocket()
 
 	err := c.protocol.SendAgencyID(agencyID)
-
 	if err != nil {
 		log.Criticalf("action: send_agency_id | result: fail | agency_id: %d, error: %s", agencyID, err)
 		return
@@ -121,19 +120,18 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 	if len(bets) > 0 {
 		_, err := c.protocol.SendBetsOnChunks(bets)
 		if err != nil {
-			log.Errorf("action: send_chunck | result: error | err: %s", err)
+			log.Errorf("action: send_chunck | result: fail | err: %s", err)
 		}
+
 		ok, _ := c.protocol.ReceivedCodeOfConfirmation()
 		if !ok {
 			log.Infof("action: answer_of_chunck | result: fail")
 		}
 	}
-	log.Infof("action: sent_all_bets | result: success")
 	err = c.protocol.SendCodeToFinishSendingChuncks()
 	if err != nil {
 		log.Errorf("action: send_end_code | result: error | err: %s", err)
 	}
-
 }
 
 func (c *Client) Close() {

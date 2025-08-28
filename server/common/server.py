@@ -44,7 +44,9 @@ class Server:
             try:
                 if not protocol.continue_recv_chuncks():
                     break
+                logging.info(f"llego un codigo de recepcion de apuestas")
                 bets = protocol.recv_bets(agency_id)
+                logging.info(f"llegaron {len(bets)} apuestas de la agencia {agency_id}")
                 # bets_fine = True
                 # for bet in bets:
                 #     (nombre, apellido, documento, nacimiento, numero) = bet
