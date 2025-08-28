@@ -13,6 +13,13 @@ import (
 )
 
 const TOTAL_FIELDS_BET = 5
+const BASE_TEN = 10
+const BITS_32 = 32
+const NAME_POSITION = 0
+const SURNAME_POSITION = 1
+const DOCUMENT_POSITION = 2
+const BIRTHDATE_POSITION = 3
+const NUMBER_POSITION = 4
 
 var log = logging.MustGetLogger("log")
 
@@ -62,21 +69,21 @@ func parseBet(line string) (Bet, error) {
 		log.Warningf("action: parse_bet | result: invalid_format | line: %s", line)
 		return Bet{}, errors.New("invalid format")
 	}
-	documento, err := strconv.ParseUint(content[2], 10, 32)
+	documento, err := strconv.ParseUint(content[DOCUMENT_POSITION], BASE_TEN, BITS_32)
 	if err != nil {
 		log.Warningf("action: parse_bet | result: invalid_document | line: %s", line)
 		return Bet{}, errors.New("invalid format")
 	}
-	numero, err := strconv.ParseUint(content[4], 10, 32)
+	numero, err := strconv.ParseUint(content[NUMBER_POSITION], BASE_TEN, BITS_32)
 	if err != nil {
 		log.Warningf("action: parse_bet | result: invalid_number | line: %s", line)
 		return Bet{}, errors.New("invalid format")
 	}
 	bet := Bet{
-		nombre:     content[0],
-		apellido:   content[1],
+		nombre:     content[NAME_POSITION],
+		apellido:   content[SURNAME_POSITION],
 		documento:  uint32(documento),
-		nacimiento: content[3],
+		nacimiento: content[BIRTHDATE_POSITION],
 		numero:     uint32(numero),
 	}
 	return bet, nil

@@ -5,6 +5,12 @@ import (
 	"net"
 )
 
+const CODE_OF_CONFIRMATION byte = 0
+const CODE_OF_BEGIN_SENDING byte = 0
+const CODE_OF_END byte = 1
+const ONE_BYTE = 1
+const INT_BYTES = 4
+
 type Protocol struct {
 	skt net.Conn
 }
@@ -41,21 +47,11 @@ func (p *Protocol) FullWrite(data []byte) error {
 }
 
 func (p *Protocol) SendInt(num uint32) error {
-	buf := make([]byte, 4)
+	buf := make([]byte, INT_BYTES)
 	binary.LittleEndian.PutUint32(buf, num)
 	err := p.FullWrite(buf)
 	return err
 }
-
-// func (p *Protocol) SendString(msg string) error {
-// 	buf := make([]byte, 1)
-// 	buf[0] = byte(len(msg))
-// 	err := p.FullWrite(buf)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return p.FullWrite([]byte(msg))
-// }
 
 func (p *Protocol) Close() {
 	if p.skt != nil {
@@ -63,53 +59,28 @@ func (p *Protocol) Close() {
 	}
 }
 
-// func (p *Protocol) sendBet(nombre string, apellido string, documento uint32, nacimiento string, numero uint32) error {
-
-// 	err := p.SendString(nombre)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	err = p.SendString(apellido)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	err = p.SendInt(documento)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	err = p.SendString(nacimiento)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	err = p.SendInt(numero)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
 func (p *Protocol) ReceivedCodeOfConfirmation() (bool, error) {
-	buf := make([]byte, 1)
+	buf := make([]byte, ONE_BYTE)
 	n, err := p.skt.Read(buf)
-	if err == nil && buf[0] == byte(0) && n == 1 {
+	if err == nil && buf[0] == CODE_OF_CONFIRMATION && n == ONE_BYTE {
 		return true, err
 	}
 	return false, err
 }
 
 func (c *Protocol) SendCodeToStartSendingChuncks() error {
-	buf := make([]byte, 1)
-	buf[0] = byte(0)
+	buf := make([]byte, ONE_BYTE)
+	buf[0] = CODE_OF_BEGIN_SENDING
 	return c.FullWrite(buf)
 }
 func (c *Protocol) SendCodeToFinishSendingChuncks() error {
-	buf := make([]byte, 1)
-	buf[0] = byte(1)
+	buf := make([]byte, ONE_BYTE)
+	buf[0] = CODE_OF_END
 	return c.FullWrite(buf)
 }
 
 func ui32ToLittleEndianBytes(num uint32) []byte {
-	buf := make([]byte, 4)
+	buf := make([]byte, INT_BYTES)
 	binary.LittleEndian.PutUint32(buf, num)
 	return buf
 }
