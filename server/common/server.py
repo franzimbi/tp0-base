@@ -46,10 +46,10 @@ class Server:
                     if code is None:
                         logging.error("code is none, client disconnected")
                         return
-                    if code == b'\x01':
-                        logging.info("action: fin_de_envio_de_apuestas | result: success")
-                        protocol.close()
-                        return
+                    # if code == b'\x01':
+                    #     logging.info("action: fin_de_envio_de_apuestas | result: success")
+                    #     protocol.close()
+                    #     return
                     bets = protocol.recv_bets(agency_id)
                     utils.store_bets(bets)
                     logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
