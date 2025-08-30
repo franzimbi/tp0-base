@@ -173,7 +173,6 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 		}
 		c.protocol.Close()
 	}
-	time.Sleep(c.config.LoopPeriod)
 }
 
 func (c *Client) Close() {

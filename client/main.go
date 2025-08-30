@@ -127,4 +127,5 @@ func main() {
 	client.SendBets("agency.csv", uint32(v.GetInt("id")), int(v.GetInt("batch.maxAmount")))
 
 	client.Close()
+	log.Infof("action: exit | result: success")
 }
