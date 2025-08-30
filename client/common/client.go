@@ -104,6 +104,7 @@ func (c *Client) sendChucksAndReceiveConfirmation(bets []Bet) (int, error) {
 
 func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) {
 	c.createClientSocket()
+	defer c.Close()
 
 	err := c.protocol.SendAgencyID(agencyID)
 	if err != nil {
