@@ -128,6 +128,6 @@ func main() {
 	maxAmount := uint32(v.GetInt("batch.maxAmount"))
 
 	client.SendBets("agency.csv", id, int(maxAmount))
-	log.Infof("action: all_bets_sent | result: success | agencyID: %v", id)
+	log.Infof("action: exit | result: success | agencyID: %v", id)
 	// client.Close()
 }
