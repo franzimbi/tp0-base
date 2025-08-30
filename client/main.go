@@ -125,7 +125,7 @@ func main() {
 	}()
 
 	batchSize := int(v.GetInt("batch.maxAmount"))
-	log.Infof("action: config_debug | batch_max_amount: %d", batchSize)
+	log.Debugf("action: config_debug | batch_max_amount: %d", batchSize)
 
 	client.SendBets("agency.csv", uint32(v.GetInt("id")), batchSize)
 
