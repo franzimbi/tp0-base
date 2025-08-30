@@ -41,15 +41,18 @@ class Server:
         try:
             agency_id = str(protocol.recv_agency_id())
             while True:
+                logging.info("arranca el while true de recibir apuestas")
                 try:
+                    logging.info("esperando code")
                     code = protocol.recv_code_command()
+                    logging.info(f"code recibido: {code}")
                     if code is None:
                         logging.error("code is none, client disconnected")
                         return
-                    # if code == b'\x01':
-                    #     logging.info("action: fin_de_envio_de_apuestas | result: success")
-                    #     protocol.close()
-                    #     return
+                    if code == b'\x01':
+                        logging.info("action: fin_de_envio_de_apuestas | result: success")
+                        protocol.close()
+                        return
                     bets = protocol.recv_bets(agency_id)
                     utils.store_bets(bets)
                     logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
