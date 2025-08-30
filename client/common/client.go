@@ -152,13 +152,12 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 			return
 		}
 	}
-	// err = c.protocol.SendCodeToFinishSendingChuncks()
-	// if err != nil {
-	// 	log.Errorf("action: send_end_code | result: error | err: %s", err)
-	// }
-	log.Info("termino el client sendBets")
-	// time.Sleep(c.config.LoopPeriod)
-	// c.Close()
+	err = c.protocol.SendCodeToFinishSendingChuncks()
+	if err != nil {
+		log.Errorf("action: send_end_code | result: error | err: %s", err)
+	} else {
+		log.Info("action: send_end_code | result: success")
+	}
 }
 
 func (c *Client) Close() {

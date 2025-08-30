@@ -51,6 +51,12 @@ class Protocol:
         self.skt.sendall(ACK_CODE)
         return
     
+    def send_final_ack(self):
+        self.skt.settimeout(5)
+        self.skt.sendall(ACK_CODE)
+        self.skt.settimeout(None)
+        return
+    
     def send_errorApuesta(self):
         self.skt.sendall(ERROR_CODE)
         return
