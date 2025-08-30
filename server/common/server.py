@@ -38,22 +38,21 @@ class Server:
         If a problem arises in the communication with the client, the
         client protocol will also be closed
         """
-        agency_id = str(protocol.recv_agency_id())
-
-        while True:
-            try:
-                if not protocol.continue_recv_chuncks():
+        try:
+            agency_id = str(protocol.recv_agency_id())
+            while True:
+                try:
+                    if not protocol.continue_recv_chuncks():
+                        break
+                    bets = protocol.recv_bets(agency_id)
+                    utils.store_bets(bets)
+                    logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
+                    protocol.send_ack()
+                except OSError as e:
+                    logging.error(f"action: socket_closed | result: {e}")
                     break
-                bets = protocol.recv_bets(agency_id)
-
-                utils.store_bets(bets)
-                logging.info(f'action: apuesta_recibida | result: success |  cantidad: {len(bets)}')
-                protocol.send_ack()
-
-            except OSError as e:
-                logging.error(f"action: socket_closed | result: {e}")
-                return
-        protocol.close()
+        finally:
+            protocol.close()
 
     def __accept_new_connection(self):
         logging.info('action: accept_connections | result: in_progress')
