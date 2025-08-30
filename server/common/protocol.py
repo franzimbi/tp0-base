@@ -78,12 +78,9 @@ class Protocol:
     
     def continue_recv_chuncks(self):
         buf =  self.__recv_all(ONE_BYTE)
-        if buf is None:
-            raise OSError("Client disconnected")
         if buf == CODE_BEFORE_RCV_BETS:
             return True
         else:
-            # self.send_ack()
             return False
 
     def recv_bets(self, agency_id):
