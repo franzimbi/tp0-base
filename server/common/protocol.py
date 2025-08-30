@@ -5,6 +5,7 @@ from common.utils import Bet
 ACK_CODE = b'\x00'
 ERROR_CODE = b'\x02'
 CODE_BEFORE_RCV_BETS = b'\x00'
+CODE_OF_END = b'\x01'
 
 ONE_BYTE = 1
 FOUR_BYTES = 4
@@ -76,9 +77,9 @@ class Protocol:
     def recv_agency_id(self):
         return self.recv_int()
     
-    def continue_recv_chuncks(self):
+    def recv_code_command(self):
         buf = self.__recv_all(ONE_BYTE)
-        return buf is not None and buf == CODE_BEFORE_RCV_BETS
+        return buf
 
     def recv_bets(self, agency_id):
         count = self.recv_int()

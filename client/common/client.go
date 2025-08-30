@@ -58,6 +58,7 @@ func (c *Client) createClientSocket() error {
 			c.config.ID,
 			err,
 		)
+		return err
 	}
 	c.protocol = NewProtocol(conn) // esto lo dejo pq venia asi, pero si es por mi q se cree el Protocol adentro del cliente
 	return nil
@@ -103,8 +104,9 @@ func (c *Client) sendChucksAndReceiveConfirmation(bets []Bet) (int, error) {
 }
 
 func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) {
-	c.createClientSocket()
-	// defer c.Close()
+	if c.createClientSocket() != nil {
+		return
+	}
 
 	err := c.protocol.SendAgencyID(agencyID)
 	if err != nil {
@@ -155,7 +157,7 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 		log.Errorf("action: send_end_code | result: error | err: %s", err)
 	}
 	log.Info("termino el client sendBets")
-	time.Sleep(c.config.LoopPeriod)
+	// time.Sleep(c.config.LoopPeriod)
 	// c.Close()
 }
 
