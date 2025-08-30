@@ -160,18 +160,19 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 		err := c.protocol.SendAgencyID(agencyID)
 		if err != nil {
 			log.Warningf("action: send_agency_id | result: fail | agency_id: %d, error: %s", agencyID, err)
-			// c.protocol.Close()
+			c.protocol.Close()
 			return
 		}
 		_, err = c.sendChucksAndReceiveConfirmation(bets)
 		if err != nil {
 			log.Error("action: send_chunck | result: fail")
-			// c.protocol.Close()
+			c.protocol.Close()
 			return
 		} else {
 			log.Infof("action: sent_chunck | result: success | chunk_number: %d", i)
 		}
 		c.protocol.Close()
+		log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 	}
 }
 
