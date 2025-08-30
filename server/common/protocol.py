@@ -21,15 +21,13 @@ class Protocol:
         self.skt = socket
     
     def __recv_all(self, size):
-        ''' la forma de no tener un short read'''
+        ''' la forma de no tener un short read '''
         buf = b''
         while len(buf) < size:
-            n = self.skt.recv(size - len(buf))
-            if n == b'':
+            chunk = self.skt.recv(size - len(buf))
+            if chunk == b'':  # EOF
                 return None
-            if n == 0:
-                return None
-            buf += n
+            buf += chunk
         return buf
 
     def recv_int(self):
