@@ -135,10 +135,11 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 			}
 			sent, err := c.sendChucksAndReceiveConfirmation(bets)
 			if err != nil {
-				log.Error("action: send_chunck | result: fail")
+				log.Error("action: sent_chunck | result: fail")
 				c.protocol.Close()
 				return
 			}
+			log.Info("action: sent_chunck | result: success")
 			if sent < len(bets) {
 				bets = bets[sent:]
 			} else {
