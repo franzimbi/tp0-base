@@ -52,6 +52,7 @@ class Server:
                     logging.error(f"action: socket_closed | result: {e}")
                     break
         finally:
+            logging.info("cerrando socket del cliente")
             protocol.close()
 
     def __accept_new_connection(self):

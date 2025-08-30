@@ -133,6 +133,7 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 		if len(bets) >= maxBatchAmount {
 			sent, err := c.sendChucksAndReceiveConfirmation(bets)
 			if err != nil {
+				log.Error("error al enviar chunk")
 				return
 			}
 			if sent < len(bets) {
@@ -145,6 +146,7 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 	if len(bets) > 0 {
 		_, err := c.sendChucksAndReceiveConfirmation(bets)
 		if err != nil {
+			log.Error("error al enviar los ultimos bets")
 			return
 		}
 	}
@@ -152,8 +154,9 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 	if err != nil {
 		log.Errorf("action: send_end_code | result: error | err: %s", err)
 	}
+	log.Info("termino el client sendBets")
 	// time.Sleep(c.config.LoopPeriod)
-	c.Close()
+	// c.Close()
 }
 
 func (c *Client) Close() {

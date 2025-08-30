@@ -77,11 +77,8 @@ class Protocol:
         return self.recv_int()
     
     def continue_recv_chuncks(self):
-        buf =  self.__recv_all(ONE_BYTE)
-        if buf == CODE_BEFORE_RCV_BETS:
-            return True
-        else:
-            return False
+        buf = self.__recv_all(ONE_BYTE)
+        return buf is not None and buf == CODE_BEFORE_RCV_BETS
 
     def recv_bets(self, agency_id):
         count = self.recv_int()
