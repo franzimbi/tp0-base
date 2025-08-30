@@ -113,6 +113,8 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 
 	var bets []Bet
 
+	i := 1
+
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -139,7 +141,8 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 				c.protocol.Close()
 				return
 			}
-			log.Info("action: sent_chunck | result: success")
+			log.Infof("action: sent_chunck | result: success | chunk_number: %d", i)
+			i++
 			if sent < len(bets) {
 				bets = bets[sent:]
 			} else {
@@ -148,6 +151,7 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 			c.protocol.Close()
 		}
 	}
+
 	if len(bets) > 0 {
 		if c.createClientSocket() != nil {
 			log.Error("action: create_socket | result: fail")
@@ -156,14 +160,16 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 		err := c.protocol.SendAgencyID(agencyID)
 		if err != nil {
 			log.Warningf("action: send_agency_id | result: fail | agency_id: %d, error: %s", agencyID, err)
-			c.protocol.Close()
+			// c.protocol.Close()
 			return
 		}
 		_, err = c.sendChucksAndReceiveConfirmation(bets)
 		if err != nil {
 			log.Error("action: send_chunck | result: fail")
-			c.protocol.Close()
+			// c.protocol.Close()
 			return
+		} else {
+			log.Infof("action: sent_chunck | result: success | chunk_number: %d", i)
 		}
 		c.protocol.Close()
 	}
