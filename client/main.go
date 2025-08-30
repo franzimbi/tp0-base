@@ -124,10 +124,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	batchSize := int(v.GetInt("batch.maxAmount"))
-	log.Debugf("action: config_debug | batch_max_amount: %d", batchSize)
-
-	client.SendBets("agency.csv", uint32(v.GetInt("id")), batchSize)
+	client.SendBets("agency.csv", uint32(v.GetInt("id")), int(v.GetInt("batch.maxAmount")))
 
 	client.Close()
 	log.Infof("action: exit | result: success")
