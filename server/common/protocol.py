@@ -25,6 +25,8 @@ class Protocol:
         buf = b''
         while len(buf) < size:
             n = self.skt.recv(size - len(buf))
+            if n == b'':
+                return None
             if n == 0:
                 return None
             buf += n
