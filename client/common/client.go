@@ -132,6 +132,7 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 			return
 		}
 		log.Infof("action: send_bets | result: success | bets_sent: %v", betsCounter)
+		time.Sleep(c.config.LoopPeriod)
 		c.Close()
 	}
 
