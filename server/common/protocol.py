@@ -1,43 +1,27 @@
 import socket
 
-from common.utils import Bet
-
-ACK_CODE = b'\x00'
-ERROR_CODE = b'\x02'
-CODE_BEFORE_RCV_BETS = b'\x00'
-CODE_OF_END = b'\x01'
-
-ONE_BYTE = 1
-FOUR_BYTES = 4
-
-NAME_POS = 0
-LASTNAME_POS = 1
-DOCUMENT_POS = 2
-BIRTHDATE_POS = 3
-NUMBER_POS = 4
-
 class Protocol:
     def __init__(self, socket: socket.socket):
         self.skt = socket
     
     def __recv_all(self, size):
-        ''' la forma de no tener un short read '''
+        ''' la forma de no tener un short read'''
         buf = b''
         while len(buf) < size:
-            chunk = self.skt.recv(size - len(buf))
-            if chunk == b'':  # EOF
+            n = self.skt.recv(size - len(buf))
+            if n == 0:
                 return None
-            buf += chunk
+            buf += n
         return buf
 
     def recv_int(self):
-        buf = self.__recv_all(FOUR_BYTES)
+        buf = self.__recv_all(4)
         if buf is None:
             return None
         return int.from_bytes(buf, byteorder='little')
     
     def recv_string(self):
-        size = self.__recv_all(ONE_BYTE)
+        size = self.__recv_all(1)
         if size is None:
             return None
         size = int.from_bytes(size, byteorder='little')
@@ -48,20 +32,13 @@ class Protocol:
         return string.decode('utf-8')
     
     def send_ack(self):
-        self.skt.sendall(ACK_CODE)
+        self.skt.sendall(b'\x01')
         return
     
-    def send_final_ack(self):
-        self.skt.settimeout(5)
-        self.skt.sendall(ACK_CODE)
-        self.skt.settimeout(None)
-        return
+    def recv_agent_id(self):
+        return self.recv_int()
     
-    def send_errorApuesta(self):
-        self.skt.sendall(ERROR_CODE)
-        return
-    
-    def _recv_bet(self):
+    def recv_bets(self):
         nombre = self.recv_string()
         if nombre is None:
             raise OSError("Client disconnected")
@@ -79,23 +56,6 @@ class Protocol:
             raise OSError("Client disconnected")
         
         return (nombre, apellido, documento, nacimiento, numero)
-    
-    def recv_agency_id(self):
-        return self.recv_int()
-    
-    def recv_code_command(self):
-        buf = self.__recv_all(ONE_BYTE)
-        return buf
-
-    def recv_bets(self, agency_id):
-        count = self.recv_int()
-        if count is None:
-            raise OSError("Client disconnected")  
-        bets = []
-        for _ in range(count):
-            bet = self._recv_bet()
-            bets.append(Bet(agency_id, bet[NAME_POS], bet[LASTNAME_POS], str(bet[DOCUMENT_POS]), bet[BIRTHDATE_POS], str(bet[NUMBER_POS])))
-        return bets
     
     def close(self):
         if self.skt is not None:

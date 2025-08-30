@@ -5,26 +5,8 @@ import (
 	"net"
 )
 
-const CODE_OF_CONFIRMATION byte = 0
-const CODE_OF_BEGIN_SENDING byte = 0
-const CODE_OF_END byte = 1
-const ONE_BYTE = 1
-const INT_BYTES = 4
-
 type Protocol struct {
 	skt net.Conn
-}
-
-const MaxDataSizekB = 8
-
-const MaxDataSize = (MaxDataSizekB * 1024) - 4 // le resto 4 bytes para el size del chunk
-
-type Bet struct {
-	nombre     string
-	apellido   string
-	documento  uint32
-	nacimiento string
-	numero     uint32
 }
 
 func NewProtocol(skt net.Conn) *Protocol {
@@ -46,54 +28,19 @@ func (p *Protocol) FullWrite(data []byte) error {
 	return nil
 }
 
-func (p *Protocol) SendInt(num uint32) error {
-	buf := make([]byte, INT_BYTES)
-	binary.LittleEndian.PutUint32(buf, num)
-	err := p.FullWrite(buf)
-	return err
-}
+func (p *Protocol) FullRead(bytes int) ([]byte, error) {
+	// la forma de no tener un short read
+	var buf = make([]byte, bytes)
+	total := 0
 
-func (p *Protocol) Close() {
-	if p.skt != nil {
-		p.skt.Close()
+	for total < bytes {
+		n, err := p.skt.Read(buf[total:])
+		if err != nil {
+			return buf[:total], err
+		}
+		total += n
 	}
-}
-
-func (p *Protocol) ReceivedCodeOfConfirmation() (bool, error) {
-	buf := make([]byte, ONE_BYTE)
-	n, err := p.skt.Read(buf)
-	if err == nil && buf[0] == CODE_OF_CONFIRMATION && n == ONE_BYTE {
-		return true, err
-	}
-	return false, err
-}
-
-func (c *Protocol) SendCodeToStartSendingChuncks() error {
-	buf := make([]byte, ONE_BYTE)
-	buf[0] = CODE_OF_BEGIN_SENDING
-	return c.FullWrite(buf)
-}
-
-func (c *Protocol) SendCodeToFinishSendingChuncks() error {
-	buf := make([]byte, ONE_BYTE)
-	buf[0] = CODE_OF_END
-	err := c.FullWrite(buf)
-	if err != nil {
-		return err
-	}
-	_, err = c.ReceivedCodeOfConfirmation() // espero ultimo ack
-	return err
-}
-
-func ui32ToLittleEndianBytes(num uint32) []byte {
-	buf := make([]byte, INT_BYTES)
-	binary.LittleEndian.PutUint32(buf, num)
-	return buf
-}
-
-func (p *Protocol) SendAgencyID(agencyID uint32) error {
-	err := p.SendInt(agencyID)
-	return err
+	return buf, nil
 }
 
 func stringToBytes(s string) []byte {
@@ -103,29 +50,42 @@ func stringToBytes(s string) []byte {
 	return buf
 }
 
-func (p *Protocol) betToBytes(bet Bet) []byte {
-	var buf = make([]byte, 0)
-	buf = append(buf, stringToBytes(bet.nombre)...)
-	buf = append(buf, stringToBytes(bet.apellido)...)
-	buf = append(buf, ui32ToLittleEndianBytes(bet.documento)...)
-	buf = append(buf, stringToBytes(bet.nacimiento)...)
-	buf = append(buf, ui32ToLittleEndianBytes(bet.numero)...)
+func ui32ToLittleEndianBytes(num uint32) []byte {
+	buf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(buf, num)
 	return buf
 }
 
-func (p *Protocol) SendBetsOnChunks(bets []Bet) (int, error) {
-	// p.SendCodeToStartSendingChuncks()
-	chunk := make([]byte, 0)
-	bets_counter := 0
-	for _, v := range bets {
-		data := p.betToBytes(v)
-		if len(chunk)+len(data) > MaxDataSize {
-			break
-		}
-		chunk = append(chunk, data...)
-		bets_counter += 1
+func (p *Protocol) Close() {
+	if p.skt != nil {
+		p.skt.Close()
 	}
-	sizeFinalChunck := ui32ToLittleEndianBytes(uint32(bets_counter))
-	err := p.FullWrite(append(sizeFinalChunck, chunk...))
-	return bets_counter, err
+}
+
+func (p *Protocol) BetToBytes(nombre string, apellido string, documento uint32, nacimiento string, numero uint32) []byte {
+	var buf = make([]byte, 0)
+	buf = append(buf, stringToBytes(nombre)...)
+	buf = append(buf, stringToBytes(apellido)...)
+	buf = append(buf, ui32ToLittleEndianBytes(documento)...)
+	buf = append(buf, stringToBytes(nacimiento)...)
+	buf = append(buf, ui32ToLittleEndianBytes(numero)...)
+	return buf
+}
+
+func (p *Protocol) SendBytes(data []byte, size uint32) error {
+	sizeBytes := ui32ToLittleEndianBytes(size)
+	return p.FullWrite(append(sizeBytes, data...))
+}
+
+func (p *Protocol) SendAgentID(id uint32) error {
+	idBytes := ui32ToLittleEndianBytes(id)
+	return p.FullWrite(idBytes)
+}
+
+func (p *Protocol) RecvAck() (bool, error) {
+	ack, err := p.FullRead(1)
+	if err == nil && ack[0] == 1 {
+		return true, err
+	}
+	return false, err
 }

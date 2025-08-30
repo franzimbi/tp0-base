@@ -2,7 +2,6 @@ package common
 
 import (
 	"bufio"
-	"errors"
 	"net"
 	"os"
 	"strconv"
@@ -12,16 +11,16 @@ import (
 	"github.com/op/go-logging"
 )
 
-const TOTAL_FIELDS_BET = 5
-const BASE_TEN = 10
-const BITS_32 = 32
-const NAME_POSITION = 0
-const SURNAME_POSITION = 1
-const DOCUMENT_POSITION = 2
-const BIRTHDATE_POSITION = 3
-const NUMBER_POSITION = 4
-
 var log = logging.MustGetLogger("log")
+
+const (
+	NAME_POSITION      = 0
+	SURNAME_POSITION   = 1
+	DOCUMENT_POSITION  = 2
+	BIRTHDATE_POSITION = 3
+	NUMBER_POSITION    = 4
+	MAXCHUNKSIZE       = (8 * 1024) - 4
+)
 
 // ClientConfig Configuration used by the client
 type ClientConfig struct {
@@ -58,52 +57,12 @@ func (c *Client) createClientSocket() error {
 			c.config.ID,
 			err,
 		)
-		return err
 	}
 	c.protocol = NewProtocol(conn) // esto lo dejo pq venia asi, pero si es por mi q se cree el Protocol adentro del cliente
 	return nil
 }
 
-func parseBet(line string) (Bet, error) {
-	content := strings.Split(line, ",")
-	if len(content) != TOTAL_FIELDS_BET {
-		log.Warningf("action: parse_bet | result: invalid_format | line: %s", line)
-		return Bet{}, errors.New("invalid format")
-	}
-	documento, err := strconv.ParseUint(content[DOCUMENT_POSITION], BASE_TEN, BITS_32)
-	if err != nil {
-		log.Warningf("action: parse_bet | result: invalid_document | line: %s", line)
-		return Bet{}, errors.New("invalid format")
-	}
-	numero, err := strconv.ParseUint(content[NUMBER_POSITION], BASE_TEN, BITS_32)
-	if err != nil {
-		log.Warningf("action: parse_bet | result: invalid_number | line: %s", line)
-		return Bet{}, errors.New("invalid format")
-	}
-	bet := Bet{
-		nombre:     content[NAME_POSITION],
-		apellido:   content[SURNAME_POSITION],
-		documento:  uint32(documento),
-		nacimiento: content[BIRTHDATE_POSITION],
-		numero:     uint32(numero),
-	}
-	return bet, nil
-}
-
-func (c *Client) sendChucksAndReceiveConfirmation(bets []Bet) (int, error) {
-	sent, err := c.protocol.SendBetsOnChunks(bets)
-	if err != nil {
-		log.Errorf("action: send_chunck | result: fail | err: %s", err)
-		return 0, err
-	}
-	ok, _ := c.protocol.ReceivedCodeOfConfirmation()
-	if !ok {
-		log.Infof("action: answer_of_chunck | result: fail")
-	}
-	return sent, nil
-}
-
-func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) {
+func (c *Client) SendBets(filePath string, id uint32, max int) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		log.Warningf("action: open file | result: fail | error: %s", err)
@@ -111,69 +70,87 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 	}
 	defer f.Close()
 
-	var bets []Bet
-
-	i := 1
-
 	scanner := bufio.NewScanner(f)
+	bytesChunk := make([]byte, 0)
+	betsCounter := 0
 	for scanner.Scan() {
 		line := scanner.Text()
-		bet, err := parseBet(line)
-		if err != nil {
+		parts := strings.Split(line, ",")
+		if len(parts) != 5 {
+			log.Warningf("action: parse line | result: fail | line: %s", line)
 			continue
 		}
-		bets = append(bets, bet)
+		doc, _ := strconv.ParseUint(parts[DOCUMENT_POSITION], 10, 32)
+		num, _ := strconv.ParseUint(parts[NUMBER_POSITION], 10, 32)
+		bytes := c.protocol.BetToBytes(parts[NAME_POSITION], parts[SURNAME_POSITION], uint32(doc), parts[BIRTHDATE_POSITION], uint32(num))
 
-		if len(bets) >= maxBatchAmount {
+		if len(bytesChunk)+len(bytes) >= MAXCHUNKSIZE || betsCounter >= int(max) {
 			if c.createClientSocket() != nil {
 				log.Error("action: create_socket | result: fail")
 				return
 			}
-			err := c.protocol.SendAgencyID(agencyID)
+			err := c.protocol.SendAgentID(id)
 			if err != nil {
-				log.Warningf("action: send_agency_id | result: fail | agency_id: %d, error: %s", agencyID, err)
-				c.protocol.Close()
+				log.Errorf("action: send_agent_id | result: fail | error: %v", err)
 				return
 			}
-			sent, err := c.sendChucksAndReceiveConfirmation(bets)
+			err = c.protocol.SendBytes(bytesChunk, uint32(betsCounter))
 			if err != nil {
-				log.Error("action: sent_chunck | result: fail")
-				c.protocol.Close()
+				log.Errorf("action: send_bets | result: fail | error: %v", err)
 				return
 			}
-			log.Infof("action: sent_chunck | result: success | chunk_number: %d", i)
-			i++
-			if sent < len(bets) {
-				bets = bets[sent:]
-			} else {
-				bets = make([]Bet, 0)
+			if b, e := c.protocol.RecvAck(); e != nil || !b {
+				log.Errorf("action: send_bets | result: fail | error: no se recibió ack del servidor")
+				return
 			}
-			c.protocol.Close()
+			log.Infof("action: send_bets | result: success | bets_sent: %v", betsCounter)
+			bytesChunk = make([]byte, 0)
+			betsCounter = 0
+			c.Close()
+		} else {
+			bytesChunk = append(bytesChunk, bytes...)
+			betsCounter++
 		}
 	}
-
-	if len(bets) > 0 {
+	if betsCounter > 0 {
 		if c.createClientSocket() != nil {
 			log.Error("action: create_socket | result: fail")
 			return
 		}
-		err := c.protocol.SendAgencyID(agencyID)
+		err := c.protocol.SendAgentID(id)
 		if err != nil {
-			log.Warningf("action: send_agency_id | result: fail | agency_id: %d, error: %s", agencyID, err)
-			c.protocol.Close()
+			log.Errorf("action: send_agent_id | result: fail | error: %v", err)
 			return
 		}
-		_, err = c.sendChucksAndReceiveConfirmation(bets)
+		err = c.protocol.SendBytes(bytesChunk, uint32(betsCounter))
 		if err != nil {
-			log.Error("action: send_chunck | result: fail")
-			c.protocol.Close()
+			log.Errorf("action: send_bets | result: fail | error: %v", err)
 			return
-		} else {
-			log.Infof("action: sent_chunck | result: success | chunk_number: %d", i)
 		}
-		c.protocol.Close()
-		log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+		if b, e := c.protocol.RecvAck(); e != nil || !b {
+			log.Errorf("action: send_bets | result: fail | error: no se recibió ack del servidor")
+			return
+		}
+		log.Infof("action: send_bets | result: success | bets_sent: %v", betsCounter)
+		c.Close()
 	}
+
+	// bytes := c.protocol.sendBet(nombre, apellido, documento, nacimiento, numero)
+	// if err != nil {
+	// 	log.Errorf("action: apuesta_enviada | result: fail | error: %v",
+	// 		err,
+	// 	)
+	// 	return
+	// }
+	// if c.protocol.RecvAck() != nil {
+	// 	log.Errorf("action: apuesta_enviada | result: fail | error: no se recibió ack del servidor")
+	// 	return
+	// }
+
+	// log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v",
+	// 	documento,
+	// 	numero,
+	// )
 }
 
 func (c *Client) Close() {

@@ -29,39 +29,34 @@ class Server:
         while True:
             protocol = self.__accept_new_connection()
             self.__handle_client_connection(protocol)
-            protocol.close()
-            logging.info("action: client_communication_finished | result: success")
+            # protocol.close()
     
 
     def __handle_client_connection(self, protocol):
-        """
-        Read message from a specific client protocol and closes the protocol
+       
+        agent_id = protocol.recv_agent_id()
+        if agent_id is None:
+            logging.error("action: receive_agent_id | result: fail | error: Client disconnected")
+            protocol.close()
+            return
+        bets_size = protocol.recv_int()
+        if bets_size is None:
+            logging.error("action: receive_bets_size | result: fail | error: Client disconnected")
+            protocol.close()
+            return
+       
+        for i in range(bets_size):
+            try:
+                nombre, apellido, documento, nacimiento, numero = protocol.recv_bets()
 
-        If a problem arises in the communication with the client, the
-        client protocol will also be closed
-        """
+                bet = utils.Bet(str(agent_id), nombre, apellido, str(documento), nacimiento, str(numero))
+                utils.store_bets([bet])
+            except OSError as e:
+                logging.error("ction: apuesta_recibida | result: fail | cantidad: {bets_size}")
 
-        agency_id = str(protocol.recv_agency_id())
-
-        # while True:
-        try:
-                # code = protocol.recv_code_command()
-                # if code is None:
-                #     logging.error("code is none, client disconnected")
-                #     # protocol.close()
-                #     return
-                # if code == b'\x01':
-                #         logging.info("action: fin_de_envio_de_apuestas | result: success")
-                #         protocol.send_final_ack()
-                #         protocol.close()
-                #         return
-            bets = protocol.recv_bets(agency_id)
-            utils.store_bets(bets)
-            logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
-            protocol.send_ack()
-        except OSError as e:
-            logging.error(f"action: socket_closed | result: {e}")
-            # break
+        logging.info(f'action: apuesta_recibida | result: success | cantidad: {bets_size}')
+        protocol.send_ack()
+        protocol.close()
 
     def __accept_new_connection(self):
         logging.info('action: accept_connections | result: in_progress')
