@@ -48,6 +48,7 @@ class Server:
                     logging.info(f"code recibido: {code}")
                     if code is None:
                         logging.error("code is none, client disconnected")
+                        protocol.close()
                         return
                     if code == b'\x01':
                         logging.info("action: fin_de_envio_de_apuestas | result: success")
