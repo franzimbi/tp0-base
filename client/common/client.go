@@ -173,61 +173,7 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 		}
 		c.protocol.Close()
 	}
-
-	// if c.createClientSocket() != nil {
-	// 	return
-	// }
-
-	// err := c.protocol.SendAgencyID(agencyID)
-	// if err != nil {
-	// 	log.Warningf("action: send_agency_id | result: fail | agency_id: %d, error: %s", agencyID, err)
-	// 	return
-	// }
-
-	// f, err := os.Open(filePath)
-	// if err != nil {
-	// 	log.Warningf("action: open file | result: fail | error: %s", err)
-	// 	return
-	// }
-	// defer f.Close()
-
-	// var bets []Bet
-
-	// scanner := bufio.NewScanner(f)
-	// for scanner.Scan() {
-	// 	line := scanner.Text()
-	// 	bet, err := parseBet(line)
-	// 	if err != nil {
-	// 		continue
-	// 	}
-	// 	bets = append(bets, bet)
-
-	// 	if len(bets) >= maxBatchAmount {
-	// 		sent, err := c.sendChucksAndReceiveConfirmation(bets)
-	// 		if err != nil {
-	// 			log.Error("error al enviar chunk")
-	// 			return
-	// 		}
-	// 		if sent < len(bets) {
-	// 			bets = bets[sent:]
-	// 		} else {
-	// 			bets = make([]Bet, 0)
-	// 		}
-	// 	}
-	// }
-	// if len(bets) > 0 {
-	// 	_, err := c.sendChucksAndReceiveConfirmation(bets)
-	// 	if err != nil {
-	// 		log.Error("error al enviar los ultimos bets")
-	// 		return
-	// 	}
-	// }
-	// err = c.protocol.SendCodeToFinishSendingChuncks()
-	// if err != nil {
-	// 	log.Errorf("action: send_end_code | result: error | err: %s", err)
-	// } else {
-	// 	log.Info("action: send_end_code | result: success")
-	// }
+	time.Sleep(c.config.LoopPeriod)
 }
 
 func (c *Client) Close() {
