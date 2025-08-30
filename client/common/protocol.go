@@ -77,12 +77,12 @@ func (c *Protocol) SendCodeToStartSendingChuncks() error {
 func (c *Protocol) SendCodeToFinishSendingChuncks() error {
 	buf := make([]byte, ONE_BYTE)
 	buf[0] = CODE_OF_END
-	err := c.FullWrite(buf)
-	if err != nil {
-		return err
-	}
-	_, err = c.ReceivedCodeOfConfirmation() // espero ultimo ack
-	return err
+	return c.FullWrite(buf)
+	// if err != nil {
+	// 	return err
+	// }
+	// _, err = c.ReceivedCodeOfConfirmation() // espero ultimo ack
+	// return err
 }
 
 func ui32ToLittleEndianBytes(num uint32) []byte {

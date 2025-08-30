@@ -83,7 +83,7 @@ class Protocol:
         if buf == CODE_BEFORE_RCV_BETS:
             return True
         else:
-            self.send_ack()
+            # self.send_ack()
             return False
 
     def recv_bets(self, agency_id):

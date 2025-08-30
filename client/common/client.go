@@ -152,7 +152,7 @@ func (c *Client) SendBets(filePath string, agencyID uint32, maxBatchAmount int) 
 	if err != nil {
 		log.Errorf("action: send_end_code | result: error | err: %s", err)
 	}
-	// time.Sleep(c.config.LoopPeriod)
+	time.Sleep(c.config.LoopPeriod)
 }
 
 func (c *Client) Close() {
