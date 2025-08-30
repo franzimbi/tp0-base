@@ -114,7 +114,7 @@ func (p *Protocol) betToBytes(bet Bet) []byte {
 }
 
 func (p *Protocol) SendBetsOnChunks(bets []Bet) (int, error) {
-	p.SendCodeToStartSendingChuncks()
+	// p.SendCodeToStartSendingChuncks()
 	chunk := make([]byte, 0)
 	bets_counter := 0
 	for _, v := range bets {

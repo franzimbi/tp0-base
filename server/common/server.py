@@ -42,25 +42,26 @@ class Server:
         """
 
         agency_id = str(protocol.recv_agency_id())
-        while True:
-            try:
-                code = protocol.recv_code_command()
-                if code is None:
-                    logging.error("code is none, client disconnected")
-                    # protocol.close()
-                    return
-                if code == b'\x01':
-                        logging.info("action: fin_de_envio_de_apuestas | result: success")
-                        protocol.send_final_ack()
-                        protocol.close()
-                        return
-                bets = protocol.recv_bets(agency_id)
-                utils.store_bets(bets)
-                logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
-                protocol.send_ack()
-            except OSError as e:
-                logging.error(f"action: socket_closed | result: {e}")
-                break
+
+        # while True:
+        try:
+                # code = protocol.recv_code_command()
+                # if code is None:
+                #     logging.error("code is none, client disconnected")
+                #     # protocol.close()
+                #     return
+                # if code == b'\x01':
+                #         logging.info("action: fin_de_envio_de_apuestas | result: success")
+                #         protocol.send_final_ack()
+                #         protocol.close()
+                #         return
+            bets = protocol.recv_bets(agency_id)
+            utils.store_bets(bets)
+            logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
+            protocol.send_ack()
+        except OSError as e:
+            logging.error(f"action: socket_closed | result: {e}")
+            # break
 
     def __accept_new_connection(self):
         logging.info('action: accept_connections | result: in_progress')
