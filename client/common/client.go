@@ -19,7 +19,7 @@ const (
 	DOCUMENT_POSITION  = 2
 	BIRTHDATE_POSITION = 3
 	NUMBER_POSITION    = 4
-	MAXCHUNKSIZE       = (8 * 1024) - 4
+	MAXCHUNKSIZE       = (8 * 1024) - 4 // 8KB - 4 bytes for the length prefix
 )
 
 // ClientConfig Configuration used by the client
@@ -84,7 +84,10 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 		num, _ := strconv.ParseUint(parts[NUMBER_POSITION], 10, 32)
 		bytes := c.protocol.BetToBytes(parts[NAME_POSITION], parts[SURNAME_POSITION], uint32(doc), parts[BIRTHDATE_POSITION], uint32(num))
 
-		if betsCounter+1 > int(max) || len(bytesChunk)+len(bytes) > MAXCHUNKSIZE {
+		bytesChunk = append(bytesChunk, bytes...)
+		betsCounter++
+
+		if betsCounter > int(max) || len(bytesChunk) > MAXCHUNKSIZE {
 			if c.createClientSocket() != nil {
 				log.Error("action: create_socket | result: fail")
 				return
@@ -94,7 +97,7 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 				log.Errorf("action: send_agent_id | result: fail | error: %v", err)
 				return
 			}
-			err = c.protocol.SendBytes(bytesChunk, uint32(betsCounter))
+			err = c.protocol.SendBytes(bytesChunk[:len(bytesChunk)-len(bytes)], uint32(betsCounter-1))
 			if err != nil {
 				log.Errorf("action: send_bets | result: fail | error: %v", err)
 				return
@@ -104,12 +107,11 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 				return
 			}
 			log.Infof("action: send_bets | result: success | bets_sent: %v", betsCounter)
-			bytesChunk = make([]byte, 0)
-			betsCounter = 0
+			bytesChunk = append(make([]byte, 0), bytes...)
+			betsCounter = 1
 			c.Close()
 		}
-		bytesChunk = append(bytesChunk, bytes...)
-		betsCounter++
+
 	}
 	if betsCounter > 0 {
 		if c.createClientSocket() != nil {
