@@ -84,9 +84,6 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 		num, _ := strconv.ParseUint(parts[NUMBER_POSITION], 10, 32)
 		bytes := c.protocol.BetToBytes(parts[NAME_POSITION], parts[SURNAME_POSITION], uint32(doc), parts[BIRTHDATE_POSITION], uint32(num))
 
-		bytesChunk = append(bytesChunk, bytes...)
-		betsCounter++
-
 		if betsCounter+1 > int(max) || len(bytesChunk)+len(bytes) > MAXCHUNKSIZE {
 			if c.createClientSocket() != nil {
 				log.Error("action: create_socket | result: fail")
