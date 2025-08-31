@@ -210,3 +210,6 @@ detalle:
 esta version abre y cierra un socket cada vez que manda un chunck, antes tenia una version que mandaba todos los chuncks con el mismo socket pero me fallaban los tests pq se colgaba por timeout. intente arreglarlo 1 dia entero y no le encontraba solucion, asi que tire un reset del repo y lo hice de esta forma.
 Otro detalle es que el test solo analiza los prints del log, y me ha pasado que si se mandan tan rapido los chuncks no llega a imprimir todos los logs, y puede llegar a fallar el test.
 
+## ejercicio 7
+
+En este ejercicio agregue que cada cliente mande un codigo de fin de apuestas y se quede colgado esperando a que el servidor le mande sus 

@@ -129,7 +129,7 @@ func main() {
 
 	client.SendBets("agency.csv", id, int(maxAmount))
 	client.WaitWinners(id)
-	time.Sleep(clientConfig.LoopPeriod)
+	// time.Sleep(clientConfig.LoopPeriod)
 	log.Infof("action: exit | result: success | agencyID: %v", id)
 	// client.Close()
 }
