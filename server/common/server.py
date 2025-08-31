@@ -44,17 +44,21 @@ class Server:
             logging.error("action: receive_bets_size | result: fail | error: Client disconnected")
             protocol.close()
             return
-       
+        
+
+        bets_procesados = 0
         for i in range(bets_size):
             try:
                 nombre, apellido, documento, nacimiento, numero = protocol.recv_bets()
 
                 bet = utils.Bet(str(agent_id), nombre, apellido, str(documento), nacimiento, str(numero))
                 utils.store_bets([bet])
+                bets_procesados += 1
+                logging.debug(f"Processed bet {i+1}/{bets_size}")
             except OSError as e:
                 logging.error("ction: apuesta_recibida | result: fail | cantidad: {bets_size}")
 
-        logging.info(f'action: apuesta_recibida | result: success | cantidad: {bets_size}')
+        logging.info(f'action: apuesta_recibida | result: success | cantidad: {bets_procesados}')
         protocol.send_ack()
         protocol.close()
 
