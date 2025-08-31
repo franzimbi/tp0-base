@@ -195,3 +195,18 @@ Posteriormente el Servidor envia un codigo 0x01 (llamado ack) para confirmar la 
 
 Despues de recibir el ack el cliente cierra su socket, y del lado del servidor se cierra despues de mandar el ack al cliente para esperar conexiones nuevas posteriormente.
 
+## ejercicio 6
+
+Ahora que tengo que mandar de a chuncks de apuestas, tengo que mejorar el protocolo anterior para poder mandar de a muchos juntos.
+Para resolverlo uso un numero de 4 bytes anteponiendo las apuestas para que el servidor sepa cuantos bets vienen en el chunk. Adicionalmente, agregue un numero de 4 bytes anteponiendo todo lo mencionado  para informar que numero de agencia es. 
+
+La tira de bytes de cada chunck se compone como:
+
+|4 bytes agecyID| |4 bytes cantidad bets| |1 bet| |2 bet| |3 bet| ... |n bet| 
+
+Posteriormente el server manda un codigo de confirmacion de que llego el chunck y fue procesado correctamente y el cliente lo espera.
+
+detalle:
+esta version abre y cierra un socket cada vez que manda un chunck, antes tenia una version que mandaba todos los chuncks con el mismo socket pero me fallaban los tests pq se colgaba por timeout. intente arreglarlo 1 dia entero y no le encontraba solucion, asi que tire un reset del repo y lo hice de esta forma.
+Otro detalle es que el test solo analiza los prints del log, y me ha pasado que si se mandan tan rapido los chuncks no llega a imprimir todos los logs, y puede llegar a fallar el test.
+
