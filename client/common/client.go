@@ -87,7 +87,7 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 		bytesChunk = append(bytesChunk, bytes...)
 		betsCounter++
 
-		if len(bytesChunk)+len(bytes) >= MAXCHUNKSIZE || betsCounter >= int(max) {
+		if betsCounter+1 > int(max) || len(bytesChunk)+len(bytes) > MAXCHUNKSIZE {
 			if c.createClientSocket() != nil {
 				log.Error("action: create_socket | result: fail")
 				return
@@ -111,6 +111,8 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 			betsCounter = 0
 			c.Close()
 		}
+		bytesChunk = append(bytesChunk, bytes...)
+		betsCounter++
 	}
 	if betsCounter > 0 {
 		if c.createClientSocket() != nil {
