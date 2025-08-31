@@ -92,7 +92,12 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 				log.Error("action: create_socket | result: fail")
 				return
 			}
-			err := c.protocol.SendAgentID(id)
+			err := c.protocol.SendChunckCode()
+			if err != nil {
+				log.Errorf("action: send_chunk_code | result: fail | error: %v", err)
+				return
+			}
+			err = c.protocol.SendAgentID(id)
 			if err != nil {
 				log.Errorf("action: send_agent_id | result: fail | error: %v", err)
 				return
@@ -118,7 +123,12 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 			log.Error("action: create_socket | result: fail")
 			return
 		}
-		err := c.protocol.SendAgentID(id)
+		err := c.protocol.SendChunckCode()
+		if err != nil {
+			log.Errorf("action: send_chunk_code | result: fail | error: %v", err)
+			return
+		}
+		err = c.protocol.SendAgentID(id)
 		if err != nil {
 			log.Errorf("action: send_agent_id | result: fail | error: %v", err)
 			return
@@ -135,6 +145,31 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 		log.Infof("action: send_bets | result: success | bets_sent: %v", betsCounter)
 		c.Close()
 	}
+}
+
+func (c *Client) WaitWinners(id uint32) {
+	if c.createClientSocket() != nil {
+		log.Error("action: create_socket | result: fail")
+		return
+	}
+	err := c.protocol.SendFinishCode()
+	if err != nil {
+		log.Errorf("action: send_finish_code | result: fail | error: %v", err)
+		return
+	}
+	err = c.protocol.SendAgentID(id)
+	if err != nil {
+		log.Errorf("action: send_agent_id | result: fail | error: %v", err)
+		return
+	}
+	ganadores, err := c.protocol.RecvWinners()
+	if err != nil {
+		log.Errorf("action: recv_winners | result: fail | error: %v", err)
+		return
+	} else {
+		log.Infof("action: consulta_ganadores | result: success | cant_ganadores: %d", len(ganadores))
+	}
+	c.Close()
 }
 
 func (c *Client) Close() {

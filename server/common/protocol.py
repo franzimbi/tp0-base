@@ -31,12 +31,30 @@ class Protocol:
             return None
         return string.decode('utf-8')
     
+    def send_int(self, n):
+        n_bytes = n.to_bytes(4, byteorder='little')
+        self.skt.sendall(n_bytes)
+        return
+    
     def send_ack(self):
         self.skt.sendall(b'\x01')
         return
     
     def recv_agent_id(self):
         return self.recv_int()
+    
+    def send_lottery_results(self, results):
+        self.send_int(len(results))
+        for document in results:
+            self.send_int(document)
+        return
+
+    
+    def recv_code(self):
+        code = self.__recv_all(1)
+        if code is None:
+            return None
+        return code
     
     def recv_bets(self):
         nombre = self.recv_string()

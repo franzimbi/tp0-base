@@ -3,8 +3,8 @@ import sys
 archivo_salida = sys.argv[1]
 cantidad_clientes = int(sys.argv[2])
 
-def crear_server():
-    return """  server:
+def crear_server(id):
+    return f"""  server:
     container_name: server
     image: server:latest
     volumes:
@@ -12,6 +12,7 @@ def crear_server():
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - CANTIDAD_CLIENTES={id}
     networks:
       - testing_net
 """
@@ -48,7 +49,7 @@ def crear_red():
 
 with open(archivo_salida, 'w') as f:
     f.write("name: tp0\nservices:\n")
-    f.write(crear_server())
+    f.write(crear_server(cantidad_clientes))
     for i in range(1, cantidad_clientes +1):
         f.write(crear_cliente(i) + "\n")
     f.write(crear_red())

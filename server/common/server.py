@@ -10,14 +10,19 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
+        self._agents_waiting = {}
 
     def graceful_shutdown(self, signum, frame):
         if self._server_socket:
             self._server_socket.close()
             logging.info("action: close_socket | result: success")
+        for i in self._agents_waiting.values():
+            if i:
+                i.close()
+                logging.info("action: agent_waiting_closed | result: success")
         exit(0)
 
-    def run(self):
+    def run(self, agentsCount):
         """
         Dummy Server loop
         Server that accept a new connections and establishes a
@@ -27,18 +32,58 @@ class Server:
         # the server
         signal.signal(signal.SIGTERM, self.graceful_shutdown)
         while True:
+            logging.debug("SIZE OF AGENTS WAITING: " + str(len(self._agents_waiting)))
+            logging.debug("AGENTS COUNT: " + str(agentsCount))
+            if len(self._agents_waiting) == agentsCount:
+                logging.debug("action: all_agents_connected | result: success")
+                self.lottery(agentsCount)
+                self._agents_waiting = {}
+                logging.info(f"action: sorteo | result: success")
             protocol = self.__accept_new_connection()
             self.__handle_client_connection(protocol)
             # protocol.close()
     
+    def lottery(self, agentsCount):
+        results = {}
+        for i in range(agentsCount):
+            results[i+1] = []
+        for bet in utils.load_bets(): # arma un arreglo con todos los dnis ganadores de cada agencia
+            if utils.has_won(bet):
+                results[bet.agency].append(bet.document)
+        for id, protocol in self._agents_waiting.items(): # envia a cada agencia su array de dnis ganadores
+            try:
+                protocol.send_lottery_results(results[id])
+                logging.debug(f"action: send_lottery_results_to_agent_{id} | result: in_progress | winners: {len(results[id])}")
+            except (socket.error, OSError) as e:
+                logging.error(f"action: send_lottery_results_to_agent_{id} | result: fail | error: {e}")
+                continue
+            logging.info(f"action: send_lottery_results_to_agent_{id} | result: success | winners: {len(results[id])}")
+        for protocol in self._agents_waiting.values(): # cierra todas las conexiones
+            protocol.close()
+
 
     def __handle_client_connection(self, protocol):
-       
+
+        code = protocol.recv_code()
+        if code is None:
+            logging.error("action: receive_code | result: fail | error: Client disconnected")
+            protocol.close()
+            return
         agent_id = protocol.recv_agent_id()
         if agent_id is None:
             logging.error("action: receive_agent_id | result: fail | error: Client disconnected")
             protocol.close()
             return
+        if code == b'\x02':  # Finish code
+            logging.info("action: agent_waiting_result | result: success")
+            self._agents_waiting[agent_id] = protocol
+
+        if code == b'\x01': # Chunk code
+            self.recv_chunck(protocol, agent_id)
+       
+ 
+
+    def recv_chunck(self, protocol, agent_id):
         bets_size = protocol.recv_int()
         if bets_size is None:
             logging.error("action: receive_bets_size | result: fail | error: Client disconnected")
@@ -61,6 +106,7 @@ class Server:
         logging.info(f'action: apuesta_recibida | result: success | cantidad: {bets_procesados}')
         protocol.send_ack()
         protocol.close()
+
 
     def __accept_new_connection(self):
         logging.info('action: accept_connections | result: in_progress')

@@ -82,10 +82,45 @@ func (p *Protocol) SendAgentID(id uint32) error {
 	return p.FullWrite(idBytes)
 }
 
+func (p *Protocol) SendChunckCode() error {
+	code := []byte{0x01}
+	return p.FullWrite(code)
+}
+
+func (p *Protocol) SendFinishCode() error {
+	code := []byte{0x02}
+	return p.FullWrite(code)
+}
+
 func (p *Protocol) RecvAck() (bool, error) {
 	ack, err := p.FullRead(1)
 	if err == nil && ack[0] == 1 {
 		return true, err
 	}
 	return false, err
+}
+
+func (p *Protocol) recvInt() (int, error) {
+	intBytes, err := p.FullRead(4)
+	if err != nil {
+		return 0, err
+	}
+	num := binary.LittleEndian.Uint32(intBytes)
+	return int(num), nil
+}
+
+func (p *Protocol) RecvWinners() ([]int, error) {
+	size, err := p.recvInt()
+	if err != nil {
+		return nil, err
+	}
+	var winners []int
+	for i := 0; i < size; i++ {
+		dni, err := p.recvInt()
+		if err != nil {
+			return nil, err
+		}
+		winners = append(winners, dni)
+	}
+	return winners, nil
 }
