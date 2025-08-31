@@ -106,7 +106,7 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 				log.Errorf("action: send_bets | result: fail | error: no se recibió ack del servidor")
 				return
 			}
-			log.Infof("action: send_bets | result: success | bets_sent: %v", betsCounter)
+			log.Infof("action: send_bets | result: success | bets_sent: %v", betsCounter-1)
 			bytesChunk = append(make([]byte, 0), bytes...)
 			betsCounter = 1
 			c.Close()
