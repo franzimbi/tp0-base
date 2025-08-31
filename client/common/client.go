@@ -84,7 +84,7 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 		num, _ := strconv.ParseUint(parts[NUMBER_POSITION], 10, 32)
 		bytes := c.protocol.BetToBytes(parts[NAME_POSITION], parts[SURNAME_POSITION], uint32(doc), parts[BIRTHDATE_POSITION], uint32(num))
 
-		if len(bytesChunk)+len(bytes) >= MAXCHUNKSIZE || betsCounter >= int(max) {
+		if len(bytesChunk)+len(bytes) > MAXCHUNKSIZE || betsCounter+1 > int(max) {
 			if c.createClientSocket() != nil {
 				log.Error("action: create_socket | result: fail")
 				return
@@ -132,26 +132,8 @@ func (c *Client) SendBets(filePath string, id uint32, max int) {
 			return
 		}
 		log.Infof("action: send_bets | result: success | bets_sent: %v", betsCounter)
-		time.Sleep(c.config.LoopPeriod)
 		c.Close()
 	}
-
-	// bytes := c.protocol.sendBet(nombre, apellido, documento, nacimiento, numero)
-	// if err != nil {
-	// 	log.Errorf("action: apuesta_enviada | result: fail | error: %v",
-	// 		err,
-	// 	)
-	// 	return
-	// }
-	// if c.protocol.RecvAck() != nil {
-	// 	log.Errorf("action: apuesta_enviada | result: fail | error: no se recibió ack del servidor")
-	// 	return
-	// }
-
-	// log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v",
-	// 	documento,
-	// 	numero,
-	// )
 }
 
 func (c *Client) Close() {
