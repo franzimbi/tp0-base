@@ -59,6 +59,8 @@ class Server:
                 continue
             logging.info(f"action: send_lottery_results_to_agent_{id} | result: success | winners: {len(results[id])}")
         for protocol in self._agents_waiting.values(): # cierra todas las conexiones
+            if not protocol.recv_ack():
+                logging.error("action: receive_ack | result: fail | error: Client disconnected")
             protocol.close()
 
 

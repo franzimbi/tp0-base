@@ -39,6 +39,8 @@ class Protocol:
     def send_ack(self):
         self.skt.sendall(b'\x01')
         return
+    def recv_ack(self):
+        return self.__recv_all(1) == b'\x01'
     
     def recv_agent_id(self):
         return self.recv_int()
@@ -46,7 +48,7 @@ class Protocol:
     def send_lottery_results(self, results):
         self.send_int(len(results))
         for document in results:
-            self.send_int(document)
+            self.send_int(int(document))
         return
 
     

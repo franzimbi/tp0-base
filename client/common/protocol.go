@@ -100,6 +100,11 @@ func (p *Protocol) RecvAck() (bool, error) {
 	return false, err
 }
 
+func (p *Protocol) sendAck() error {
+	ack := []byte{1}
+	return p.FullWrite(ack)
+}
+
 func (p *Protocol) recvInt() (int, error) {
 	intBytes, err := p.FullRead(4)
 	if err != nil {
@@ -121,6 +126,10 @@ func (p *Protocol) RecvWinners() ([]int, error) {
 			return nil, err
 		}
 		winners = append(winners, dni)
+	}
+	err = p.sendAck()
+	if err != nil {
+		return nil, err
 	}
 	return winners, nil
 }
