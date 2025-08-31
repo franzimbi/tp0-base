@@ -212,4 +212,18 @@ Otro detalle es que el test solo analiza los prints del log, y me ha pasado que 
 
 ## ejercicio 7
 
-En este ejercicio agregue que cada cliente mande un codigo de fin de apuestas y se quede colgado esperando a que el servidor le mande sus 
+En este ejercicio agregue que cada cliente mande un codigo de fin de apuestas y se quede bloqueado en el socket esperando a que el servidor le mande los dnis ganadores. Del lado del servidor este contiene un diccionario de agencias, y cuando recibe el codigo de fin de apuestas lo agrega a este. Cuando llega a la cantidad de agencias total esperando el resultado se procede a hacer el sorteo, se guarda un arreglo de ganadores de cada agencia y se les envia a estos sockets bloqueados de forma iterativa. Una vez que la agencia recibe los ganadores manda un ack y cierra el socket. en contraposicion el servidor cierra el socket cuando recibe el ack y limpia el diccionario de agencias esperando.
+
+El protocolo de recepcion de apuestas no cambia excepto pq ahora tiene un codigo para distinguir que es un chuncks de apuestas al principio de todo. 
+El protocolo de espera de ganadores del cliente es un codigo para avisar que finalizo el envio de bets, un uint32 del numero de agencia.
+
+La tira de bytes previo a esperar ganadores del lado del cliente es:
+
+|1 byte codigo de espera de ganadores| |1 byte de agencia id|
+
+la tira de bytes de la respuesta del servidor para enviar los ganadores es:
+
+|4 bytes de cantidad de ganadores| |4 bytes dni 1| |4 bytes de dni 2| ... |4 bytes de dni n|
+
+el cliente responde con un ack (codigo 0x01).
+
