@@ -37,9 +37,10 @@ class Server:
         """
         # the server
         signal.signal(signal.SIGTERM, self.graceful_shutdown)
+        barrier = Barrier(agentsCount)
         while True:
             monitor = MonitorUtils()
-            barrier = Barrier(agentsCount)
+            
             protocol = self.__accept_new_connection()
             thread = Thread(target=self.__handle_client_connection, args=(protocol, monitor, barrier))
             thread.start()
