@@ -227,3 +227,23 @@ la tira de bytes de la respuesta del servidor para enviar los ganadores es:
 
 el cliente responde con un ack (codigo 0x01).
 
+
+## ejercicio 8
+
+En este ejercicio tuve que tocar el servidor para que procesar las peticiones de multiples clientes y coordinar estas sin que haya race conditions.
+
+Mi servidor ahora en el while de run acepta clientes y una vez aceptados estos lanza un thread que tiene de parametro un monitor y una barrier.
+
+El monitor es un wrapper de las funciones de utils que nos dio la catedra, donde internamente usa un lock para que el archivo de storage no sea abierto por dos handler_client al mismo tiempo y esto tenga una RC o errores de escritura. Tambien se usa ese mismo lock para leer el archivo y obtener los ganadores de cada agencia.
+
+La barrier se inicializa con la cantidad de clientes que va a haber, y se hace un wait de ella en cada hilo que reciba el codigo de 'finalizo envio de bets'. Cuando todos los clientes hayan avisado que no tienen mas apuestas, esta barrier se libera y cada hilo puede consultar por medio del monitor los dnis ganadores.
+
+Para el manejo de threads y sockets muertos se itera una lista de los threads y los sockets y se van sacando los que no estan mas vivos.
+
+Para el manejo del cierre gracefull se hace un abort de la barrier que coordina el sorteo, lo que genera una excepcion en cada thread que estaba bloqueado en ella, que genera un fin del thread. Los sockets (encapsulados en la clase protocol) son cerrados previamente para que los threads bloqueados en estos terminen. Y finalmente se hace join de todos los threads.
+
+'En caso de que el alumno implemente el servidor en Python utilizando multithreading, deberán tenerse en cuenta las limitaciones propias del lenguaje.' -> analizando el global interpreter lock que usa python, descubri que los threads no corren en cada nucleo de mi cpu por separado, sino que hace una especie de Round Robin. PERO, las operaciones de I/O funcionan por fuera de este Lock GLobal. Dado que la mayoria de las operaciones de mi sevidor son I/O (casi todo es read/write de sockets, read/write de archivos) usar multithreading es una eleccion aceptable para el manejo de concurrencia de clientes.
+Podria haber usado multiprocessing o quizas async, pero preferi quedarme con el ya conocido mutithreading para este tp.
+
+
+

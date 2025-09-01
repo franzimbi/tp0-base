@@ -8,7 +8,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - CANTIDAD_CLIENTES=2
+      - CANTIDAD_CLIENTES=5
     networks:
       - testing_net
   client1:
@@ -44,6 +44,63 @@ services:
       - CLI_DOCUMENTO=1002
       - CLI_NACIMIENTO=1999-03-02
       - CLI_NUMERO=7112
+    networks:
+      - testing_net
+    depends_on:
+      - server
+
+  client3:
+    container_name: client3
+    image: client:latest
+    volumes:
+      - ./client/config.yaml:/config.yaml
+      - ./.data/agency-3.csv:/agency.csv
+    entrypoint: /client
+    environment:
+      - CLI_ID=3
+      - CLI_NOMBRE=nombre3
+      - CLI_APELLIDO=apellido3
+      - CLI_DOCUMENTO=1003
+      - CLI_NACIMIENTO=1999-03-03
+      - CLI_NUMERO=7113
+    networks:
+      - testing_net
+    depends_on:
+      - server
+
+  client4:
+    container_name: client4
+    image: client:latest
+    volumes:
+      - ./client/config.yaml:/config.yaml
+      - ./.data/agency-4.csv:/agency.csv
+    entrypoint: /client
+    environment:
+      - CLI_ID=4
+      - CLI_NOMBRE=nombre4
+      - CLI_APELLIDO=apellido4
+      - CLI_DOCUMENTO=1004
+      - CLI_NACIMIENTO=1999-03-04
+      - CLI_NUMERO=7114
+    networks:
+      - testing_net
+    depends_on:
+      - server
+
+  client5:
+    container_name: client5
+    image: client:latest
+    volumes:
+      - ./client/config.yaml:/config.yaml
+      - ./.data/agency-5.csv:/agency.csv
+    entrypoint: /client
+    environment:
+      - CLI_ID=5
+      - CLI_NOMBRE=nombre5
+      - CLI_APELLIDO=apellido5
+      - CLI_DOCUMENTO=1005
+      - CLI_NACIMIENTO=1999-03-05
+      - CLI_NUMERO=7115
     networks:
       - testing_net
     depends_on:
