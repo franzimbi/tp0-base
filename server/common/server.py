@@ -4,7 +4,7 @@ import signal
 import common.utils as utils
 from common.utilsMonitor import MonitorUtils
 from common.protocol import Protocol
-from threading import Thread, Barrier
+from threading import Thread, Barrier, BrokenBarrierError
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -14,6 +14,7 @@ class Server:
         self._server_socket.listen(listen_backlog)
         self._threads = []
         self._sockets = []
+        self._barrier = None
 
     def graceful_shutdown(self, signum, frame):
         if self._server_socket:
@@ -23,6 +24,8 @@ class Server:
             if s:
                 s.close()
         logging.info("action: close_all_client_sockets | result: success")
+        
+        self._barrier.abort()
         for t in self._threads:
             t.join()
         logging.info("action: close_all_threads | result: success")
@@ -35,39 +38,19 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
+        self._barrier = Barrier(agentsCount)
         # the server
         signal.signal(signal.SIGTERM, self.graceful_shutdown)
-        barrier = Barrier(agentsCount)
         while True:
             monitor = MonitorUtils()
             
             protocol = self.__accept_new_connection()
-            thread = Thread(target=self.__handle_client_connection, args=(protocol, monitor, barrier))
+            thread = Thread(target=self.__handle_client_connection, args=(protocol, monitor, self._barrier))
             thread.start()
+            self._threads = [t for t in self._threads if t.is_alive()]
             self._threads.append(thread)
+            self._sockets = [s for s in self._sockets if s.is_alive()]
             self._sockets.append(protocol)
-
-
-    # def lottery(self, agentsCount):
-    #     results = {}
-    #     for i in range(agentsCount):
-    #         results[i+1] = []
-    #     for bet in utils.load_bets(): # arma un arreglo con todos los dnis ganadores de cada agencia
-    #         if utils.has_won(bet):
-    #             results[bet.agency].append(bet.document)
-    #     for id, protocol in self._agents_waiting.items(): # envia a cada agencia su array de dnis ganadores
-    #         try:
-    #             protocol.send_lottery_results(results[id])
-    #             logging.debug(f"action: send_lottery_results_to_agent_{id} | result: in_progress | winners: {len(results[id])}")
-    #         except (socket.error, OSError) as e:
-    #             logging.error(f"action: send_lottery_results_to_agent_{id} | result: fail | error: {e}")
-    #             continue
-    #         logging.info(f"action: send_lottery_results_to_agent_{id} | result: success | winners: {len(results[id])}")
-    #     for protocol in self._agents_waiting.values(): # cierra todas las conexiones
-    #         if not protocol.recv_ack():
-    #             logging.error("action: receive_ack | result: fail | error: Client disconnected")
-    #         protocol.close()
-
 
     def __handle_client_connection(self, protocol, monitor, barrier):
 
@@ -83,7 +66,10 @@ class Server:
             return
         if code == b'\x02':  # Finish code
             logging.info("action: agent_waiting_result | result: success | agent_id: %d", agent_id)
-            barrier.wait()
+            try:
+                barrier.wait()
+            except BrokenBarrierError:
+                return
             winners_dnis = monitor.load_winners_thread_safe(agent_id)
             protocol.send_lottery_results(winners_dnis)
             if not protocol.recv_ack():

@@ -13,6 +13,9 @@ class Protocol:
                 return None
             buf += n
         return buf
+    
+    def is_alive(self):
+        return self.skt.fileno() != -1
 
     def recv_int(self):
         buf = self.__recv_all(4)
