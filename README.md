@@ -178,3 +178,62 @@ Se espera que se redacte una sección del README en donde se indique cómo ejecu
 Se proveen [pruebas automáticas](https://github.com/7574-sistemas-distribuidos/tp0-tests) de caja negra. Se exige que la resolución de los ejercicios pase tales pruebas, o en su defecto que las discrepancias sean justificadas y discutidas con los docentes antes del día de la entrega. El incumplimiento de las pruebas es condición de desaprobación, pero su cumplimiento no es suficiente para la aprobación. Respetar las entradas de log planteadas en los ejercicios, pues son las que se chequean en cada uno de los tests.
 
 La corrección personal tendrá en cuenta la calidad del código entregado y casos de error posibles, se manifiesten o no durante la ejecución del trabajo práctico. Se pide a los alumnos leer atentamente y **tener en cuenta** los criterios de corrección informados  [en el campus](https://campusgrado.fi.uba.ar/mod/page/view.php?id=73393).
+
+
+#### Detalles de resolucion
+
+## ejercicio 1
+El escript creado en este ejercicio fue basado en el de la catedra, donde se llama a un subscript de python llamado mi-generador.py. La ventaja de esto es que no hay que cambiarle los permisos al sh cada vez que se cambia algo.
+
+El generador crea un archivo con el nombre que recibe por parametro en modo escritura y a por medio de funciones de escritura de archivos arma el yaml de configuracion de los conteiners de docker.
+El server siempre es igual, por eso esta hardcodeado, pero la cantidad de clientes es variable de acuerdo al paremetro que recibe del script.
+
+## ejecucion
+
+Para correrlo se hace ./generar-compose.sh <nombre_archivo.yaml> <cantidad de clientes>
+
+Tambien pueden usarse los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para probar comportamiento.
+
+
+## ejercicio 2
+
+Para permitir que un archivo sea montado a un conteiner desde afuera y su reconstruccion no sea necesaria al cmabiar este archivo, se usa docker volumes. 
+Solo tuve que agregar la configuracion VOLUMES en mi generador, lo que permite montar los archivos de configuracion tanto en server como clients desde un path especifico de mi proyecto.
+
+
+## ejecucion
+
+Para generear un archivo yaml con esta configuracion corro ./generar-compose.sh <nombre_archivo.yaml> <cantidad de clientes>. una vez que se ejecuto, se puede cambiar la configuracion del config.ini y de config.yaml sin tener que levantar los conteiners nuevamente.
+
+Tambien pueden usarse los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para probar comportamiento.
+
+
+## ejercicio 3
+
+para este ejercicio hice un script de bash que verifique si el echo server esta funcionando correctamente, mandando y recibiendo un mensaje.
+El objetivo es hacer un conteiner que tenga instalado netcat y que hable con el servidor por medio de la red de docker configurada en los contenedores (uso de docker network).
+
+el test ejecuta un contenedor con una imagen alpine (liviana y con las herramientas necesarias instaldas), se conecta este a la red 'tp0_testing_net' que es la misma que usa el servidor, y se lanza por medio de netcat un mensaje al puerto donde esta escuchando el server. Finalmente se compara la respuesta que llega del servidor, si es igual imprime success, caso contrario fail.
+
+
+## ejecucion
+
+Para ejecutar este script se hace ./validar-echo-server.sh teniendo el servidor corriendo.
+
+Nuevamente pueden usarse los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para comprobar que funciona.
+
+
+## ejercicio 4
+
+Para hacer que el servidor cierre graceful se asocia una funcion con una señal del sistema operativo mediante la linea 'signal.signal(signal.SIGTERM, self.graceful_shutdown)', donde en caso de recibir una señal SIGTERM se invoca la funcion graceful_shutdown y posteriormente se termina el proceso actual.
+
+graceful_shutdown es un metodo propio del servidor donde se cierra el socket de escucha y se hace un exit(0) (para terminar el programa con return 0).
+
+
+Para el lado del cliente se usa un channel de tamaño 1 para trnasportar señales del SO, despues se le configura al runtime de go para que si recibe un SIGTERM lo mande por ese canal. y finalmente se tira una goroutine que espera bloqueantemente alguna señal por el canal, donde si la recibe cierra el socket y termina el proceso con codigo 0.
+
+## ejecucion
+
+usar los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para probar comportamiento.
+
+
