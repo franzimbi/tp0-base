@@ -179,7 +179,63 @@ Se proveen [pruebas automáticas](https://github.com/7574-sistemas-distribuidos/
 
 La corrección personal tendrá en cuenta la calidad del código entregado y casos de error posibles, se manifiesten o no durante la ejecución del trabajo práctico. Se pide a los alumnos leer atentamente y **tener en cuenta** los criterios de corrección informados  [en el campus](https://campusgrado.fi.uba.ar/mod/page/view.php?id=73393).
 
-### Detalles de resolucion
+
+#### Detalles de resolucion
+
+## ejercicio 1
+El escript creado en este ejercicio fue basado en el de la catedra, donde se llama a un subscript de python llamado mi-generador.py. La ventaja de esto es que no hay que cambiarle los permisos al sh cada vez que se cambia algo.
+
+El generador crea un archivo con el nombre que recibe por parametro en modo escritura y a por medio de funciones de escritura de archivos arma el yaml de configuracion de los conteiners de docker.
+El server siempre es igual, por eso esta hardcodeado, pero la cantidad de clientes es variable de acuerdo al paremetro que recibe del script.
+
+## ejecucion
+
+Para correrlo se hace ./generar-compose.sh <nombre_archivo.yaml> <cantidad de clientes>
+
+Tambien pueden usarse los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para probar comportamiento.
+
+
+## ejercicio 2
+
+Para permitir que un archivo sea montado a un conteiner desde afuera y su reconstruccion no sea necesaria al cmabiar este archivo, se usa docker volumes. 
+Solo tuve que agregar la configuracion VOLUMES en mi generador, lo que permite montar los archivos de configuracion tanto en server como clients desde un path especifico de mi proyecto.
+
+
+## ejecucion
+
+Para generear un archivo yaml con esta configuracion corro ./generar-compose.sh <nombre_archivo.yaml> <cantidad de clientes>. una vez que se ejecuto, se puede cambiar la configuracion del config.ini y de config.yaml sin tener que levantar los conteiners nuevamente.
+
+Tambien pueden usarse los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para probar comportamiento.
+
+
+## ejercicio 3
+
+para este ejercicio hice un script de bash que verifique si el echo server esta funcionando correctamente, mandando y recibiendo un mensaje.
+El objetivo es hacer un conteiner que tenga instalado netcat y que hable con el servidor por medio de la red de docker configurada en los contenedores (uso de docker network).
+
+el test ejecuta un contenedor con una imagen alpine (liviana y con las herramientas necesarias instaldas), se conecta este a la red 'tp0_testing_net' que es la misma que usa el servidor, y se lanza por medio de netcat un mensaje al puerto donde esta escuchando el server. Finalmente se compara la respuesta que llega del servidor, si es igual imprime success, caso contrario fail.
+
+
+## ejecucion
+
+Para ejecutar este script se hace ./validar-echo-server.sh teniendo el servidor corriendo.
+
+Nuevamente pueden usarse los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para comprobar que funciona.
+
+
+## ejercicio 4
+
+Para hacer que el servidor cierre graceful se asocia una funcion con una señal del sistema operativo mediante la linea 'signal.signal(signal.SIGTERM, self.graceful_shutdown)', donde en caso de recibir una señal SIGTERM se invoca la funcion graceful_shutdown y posteriormente se termina el proceso actual.
+
+graceful_shutdown es un metodo propio del servidor donde se cierra el socket de escucha y se hace un exit(0) (para terminar el programa con return 0).
+
+
+Para el lado del cliente se usa un channel de tamaño 1 para trnasportar señales del SO, despues se le configura al runtime de go para que si recibe un SIGTERM lo mande por ese canal. y finalmente se tira una goroutine que espera bloqueantemente alguna señal por el canal, donde si la recibe cierra el socket y termina el proceso con codigo 0.
+
+## ejecucion
+
+usar los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para probar comportamiento.
+
 
 ## ejercicio 5
 
@@ -195,6 +251,12 @@ Posteriormente el Servidor envia un codigo 0x01 (llamado ack) para confirmar la 
 
 Despues de recibir el ack el cliente cierra su socket, y del lado del servidor se cierra despues de mandar el ack al cliente para esperar conexiones nuevas posteriormente.
 
+
+## ejecucion
+
+usar los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para probar comportamiento.
+
+
 ## ejercicio 6
 
 Ahora que tengo que mandar de a chuncks de apuestas, tengo que mejorar el protocolo anterior para poder mandar de a muchos juntos.
@@ -209,6 +271,11 @@ Posteriormente el server manda un codigo de confirmacion de que llego el chunck 
 detalle:
 esta version abre y cierra un socket cada vez que manda un chunck, antes tenia una version que mandaba todos los chuncks con el mismo socket pero me fallaban los tests pq se colgaba por timeout. intente arreglarlo 1 dia entero y no le encontraba solucion, asi que tire un reset del repo y lo hice de esta forma.
 Otro detalle es que el test solo analiza los prints del log, y me ha pasado que si se mandan tan rapido los chuncks no llega a imprimir todos los logs, y puede llegar a fallar el test.
+
+## ejecucion
+
+usar los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para probar comportamiento.
+
 
 ## ejercicio 7
 
@@ -226,6 +293,10 @@ la tira de bytes de la respuesta del servidor para enviar los ganadores es:
 |4 bytes de cantidad de ganadores| |4 bytes dni 1| |4 bytes de dni 2| ... |4 bytes de dni n|
 
 el cliente responde con un ack (codigo 0x01).
+
+## ejecucion
+
+usar los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para probar comportamiento.
 
 
 ## ejercicio 8
@@ -245,5 +316,6 @@ Para el manejo del cierre gracefull se hace un abort de la barrier que coordina 
 'En caso de que el alumno implemente el servidor en Python utilizando multithreading, deberán tenerse en cuenta las limitaciones propias del lenguaje.' -> analizando el global interpreter lock que usa python, descubri que los threads no corren en cada nucleo de mi cpu por separado, sino que hace una especie de Round Robin. PERO, las operaciones de I/O funcionan por fuera de este Lock GLobal. Dado que la mayoria de las operaciones de mi sevidor son I/O (casi todo es read/write de sockets, read/write de archivos) usar multithreading es una eleccion aceptable para el manejo de concurrencia de clientes.
 Podria haber usado multiprocessing o quizas async, pero preferi quedarme con el ya conocido mutithreading para este tp.
 
+## ejecucion
 
-
+usar los [tests de la catedra](https://github.com/7574-sistemas-distribuidos/tp0-tests) para probar comportamiento.
